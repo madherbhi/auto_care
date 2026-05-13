@@ -1,6 +1,6 @@
 import 'package:auto_care/constants/app_layout.dart';
 import 'package:auto_care/features/Authentication/register_page.dart';
-import 'package:auto_care/features/inspection/inspection_request_list_page.dart';
+import 'package:auto_care/features/Home/home_page.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
@@ -182,7 +182,7 @@ class _LoginPageState extends State<LoginPage> {
                                   Navigator.of(context).pushAndRemoveUntil(
                                     MaterialPageRoute<void>(
                                       builder: (_) =>
-                                          const InspectionRequestListPage(),
+                                          const HomeRequestListPage(),
                                     ),
                                     (_) => false,
                                   );

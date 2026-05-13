@@ -1,4 +1,7 @@
 import 'package:auto_care/constants/app_layout.dart';
+import 'package:auto_care/features/vehicle/add_vehicle_page.dart';
+import 'package:auto_care/features/vehicle/vehicle_detail_page.dart';
+import 'package:auto_care/features/models/vehicle_record_list_model.dart';
 import 'package:auto_care/starting_page.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
@@ -7,7 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 
-enum InspectionStatusTone {
+enum HomeStatusTone {
   neutral,
   processing,
   submitted,
@@ -16,8 +19,8 @@ enum InspectionStatusTone {
   rejected,
 }
 
-class InspectionListRow {
-  const InspectionListRow({
+class HomeListRow {
+  const HomeListRow({
     required this.vehicleIcon,
     required this.registrationNumber,
     required this.ownerName,
@@ -32,65 +35,123 @@ class InspectionListRow {
   final String ownerName;
   final String status;
   final String date;
-  final InspectionStatusTone statusTone;
+  final HomeStatusTone statusTone;
   final bool selectedCard;
 }
 
-class InspectionRequestListPage extends StatefulWidget {
-  const InspectionRequestListPage({super.key});
+class HomeRequestListPage extends StatefulWidget {
+  const HomeRequestListPage({super.key});
 
   @override
-  State<InspectionRequestListPage> createState() =>
-      _InspectionRequestListPageState();
+  State<HomeRequestListPage> createState() =>
+      _HomeRequestListPageState();
 }
 
-class _InspectionRequestListPageState extends State<InspectionRequestListPage> {
+class _HomeRequestListPageState extends State<HomeRequestListPage> {
   final _searchController = TextEditingController();
   final _searchFocus = FocusNode();
 
-  static final List<InspectionListRow> _allRows = [
-    const InspectionListRow(
+  late List<HomeListRow> _allRows = [
+    const HomeListRow(
       vehicleIcon: Icons.directions_car_rounded,
       registrationNumber: "AP39FG8236",
       ownerName: "Mr. Kumar",
       status: "Submitted",
       date: "05/05/26",
-      statusTone: InspectionStatusTone.submitted,
+      statusTone: HomeStatusTone.submitted,
       selectedCard: true,
     ),
-    const InspectionListRow(
+    const HomeListRow(
       vehicleIcon: Icons.directions_car_rounded,
       registrationNumber: "AP39FG8237",
       ownerName: "Mr. Raju",
       status: "under process",
       date: "06/05/26",
-      statusTone: InspectionStatusTone.processing,
+      statusTone: HomeStatusTone.processing,
     ),
-    const InspectionListRow(
+    const HomeListRow(
       vehicleIcon: Icons.local_shipping_rounded,
       registrationNumber: "TS10AB1234",
       ownerName: "Ms. Priya",
       status: "Pending",
       date: "04/05/26",
-      statusTone: InspectionStatusTone.pending,
+      statusTone: HomeStatusTone.pending,
     ),
-    const InspectionListRow(
+    const HomeListRow(
       vehicleIcon: Icons.two_wheeler_rounded,
       registrationNumber: "KA05CD9999",
       ownerName: "Mr. Ahmed",
       status: "Approved",
       date: "01/05/26",
-      statusTone: InspectionStatusTone.approved,
+      statusTone: HomeStatusTone.approved,
     ),
-    const InspectionListRow(
+    const HomeListRow(
       vehicleIcon: Icons.directions_car_rounded,
       registrationNumber: "MH12XY0001",
       ownerName: "Ms. Lee",
       status: "Rejected",
       date: "30/04/26",
-      statusTone: InspectionStatusTone.rejected,
+      statusTone: HomeStatusTone.rejected,
     ),
   ];
+
+  VehicleRecord _vehicleForRow(HomeListRow row) {
+    return kSampleVehiclesByRegNo[row.registrationNumber] ??
+        VehicleRecord(
+          vehicleNo: row.registrationNumber,
+          type: 'CAR',
+          location: '',
+          ownerName: row.ownerName,
+          ownerContact: '',
+          userName: row.ownerName,
+        );
+  }
+
+  Future<void> _openAddVehicle() async {
+    final result = await Navigator.of(context).push<VehicleRecord>(
+      MaterialPageRoute(builder: (_) => const AddVehiclePage()),
+    );
+    if (result == null || !mounted) return;
+    kSampleVehiclesByRegNo[result.vehicleNo] = result;
+    setState(() {
+      _allRows = [
+        HomeListRow(
+          vehicleIcon: Icons.directions_car_rounded,
+          registrationNumber: result.vehicleNo,
+          ownerName: result.ownerName,
+          status: 'Pending',
+          date: '13/05/26',
+          statusTone: HomeStatusTone.pending,
+        ),
+        ..._allRows,
+      ];
+    });
+  }
+
+  Future<void> _openVehicleDetail(HomeListRow row) async {
+    final initial = _vehicleForRow(row);
+    final result = await Navigator.of(context).push<VehicleRecord>(
+      MaterialPageRoute(
+        builder: (_) => VehicleDetailPage(vehicle: initial),
+      ),
+    );
+    if (result == null || !mounted) return;
+    kSampleVehiclesByRegNo[result.vehicleNo] = result;
+    setState(() {
+      _allRows = _allRows.map((r) {
+        if (r.registrationNumber != row.registrationNumber) return r;
+        return HomeListRow(
+          vehicleIcon: r.vehicleIcon,
+          registrationNumber: result.vehicleNo,
+          ownerName: result.ownerName,
+          status: r.status,
+          date: r.date,
+          statusTone: r.statusTone,
+          selectedCard: r.selectedCard,
+        );
+      }).toList();
+    });
+  }
 
   @override
   void dispose() {
@@ -99,7 +160,7 @@ class _InspectionRequestListPageState extends State<InspectionRequestListPage> {
     super.dispose();
   }
 
-  List<InspectionListRow> get _filteredRows {
+  List<HomeListRow> get _filteredRows {
     final q = _searchController.text.trim().toLowerCase();
     if (q.isEmpty) return _allRows;
     return _allRows
@@ -126,11 +187,11 @@ class _InspectionRequestListPageState extends State<InspectionRequestListPage> {
       ),
       child: Scaffold(
         backgroundColor: ColorHelper.footerBarBg,
-        appBar: const _InspectionListAppBar(),
+        appBar: const _HomeListAppBar(),
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _InspectionSearchRow(
+            _HomeSearchRow(
               padH: 10,
               controller: _searchController,
               focusNode: _searchFocus,
@@ -144,10 +205,9 @@ class _InspectionRequestListPageState extends State<InspectionRequestListPage> {
                 itemBuilder: (context, index) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 10),
-                    child: _InspectionRequestCard(
+                    child: _HomeRequestCard(
                       row: rows[index],
-                      onTap: () {
-                     },
+                      onTap: () => _openVehicleDetail(rows[index]),
                     ),
                   );
                 },
@@ -156,8 +216,7 @@ class _InspectionRequestListPageState extends State<InspectionRequestListPage> {
             _BottomActionsRow(
               padH: padH,
               bottomExtra: bottomInset * 0.2,
-              onAddNew: () {
-             },
+              onAddNew: _openAddVehicle,
               onLogout: () {
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute<void>(builder: (_) => const StartingPage()),
@@ -172,9 +231,9 @@ class _InspectionRequestListPageState extends State<InspectionRequestListPage> {
   }
 }
 
-class _InspectionListAppBar extends StatelessWidget
+class _HomeListAppBar extends StatelessWidget
     implements PreferredSizeWidget {
-  const _InspectionListAppBar();
+  const _HomeListAppBar();
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -186,34 +245,27 @@ class _InspectionListAppBar extends StatelessWidget
       elevation: 2,
       scrolledUnderElevation: 2,
       shadowColor: ColorHelper.primaryBlue.withValues(alpha: 0.2),
-      backgroundColor: Colors.transparent,
+      backgroundColor: ColorHelper.primaryBlue,
       surfaceTintColor: Colors.transparent,
-      flexibleSpace: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: ColorHelper.authBarHorizontalGradient,
-        ),
-        child: const Align(
-          alignment: Alignment.center,
-          child: Padding(padding: EdgeInsets.only(top: 42.0), child: Text(
-            StringHelper.inspectionRequestListTitle,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontFamily: FontHelper.poppinsSemiBold,
-              color: ColorHelper.white,
-              fontSize: 16,
-              height: 1.2,
-            ),
-          ),
+      centerTitle: true,
+      title: const Text(
+        StringHelper.inspectionRequestListTitle,
+        textAlign: TextAlign.center,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontFamily: FontHelper.poppinsSemiBold,
+          color: ColorHelper.white,
+          fontSize: 16,
+          height: 1.2,
         ),
       ),
-     ), );
+    );
   }
 }
 
-class _InspectionSearchRow extends StatelessWidget {
-  const _InspectionSearchRow({
+class _HomeSearchRow extends StatelessWidget {
+  const _HomeSearchRow({
     required this.padH,
     required this.controller,
     required this.focusNode,
@@ -293,19 +345,19 @@ class _InspectionSearchRow extends StatelessWidget {
   }
 }
 
-({Color bg, Color fg}) _statusToneColors(InspectionStatusTone tone) {
+({Color bg, Color fg}) _statusToneColors(HomeStatusTone tone) {
   switch (tone) {
-    case InspectionStatusTone.processing:
+    case HomeStatusTone.processing:
       return (bg: Colors.red.shade50, fg: Colors.red.shade700);
-    case InspectionStatusTone.submitted:
+    case HomeStatusTone.submitted:
       return (bg: Colors.blue.shade50, fg: Colors.blue.shade700);
-    case InspectionStatusTone.pending:
+    case HomeStatusTone.pending:
       return (bg: Colors.orange.shade50, fg: Colors.orange.shade800);
-    case InspectionStatusTone.approved:
+    case HomeStatusTone.approved:
       return (bg: Colors.green.shade50, fg: Colors.green.shade800);
-    case InspectionStatusTone.rejected:
+    case HomeStatusTone.rejected:
       return (bg: ColorHelper.lightGray, fg: ColorHelper.darkGray);
-    case InspectionStatusTone.neutral:
+    case HomeStatusTone.neutral:
       return (
         bg: ColorHelper.primaryBlue.withValues(alpha: 0.08),
         fg: ColorHelper.primaryBlue,
@@ -313,17 +365,17 @@ class _InspectionSearchRow extends StatelessWidget {
   }
 }
 
-class _InspectionRequestCard extends StatelessWidget {
-  const _InspectionRequestCard({required this.row, required this.onTap});
+class _HomeRequestCard extends StatelessWidget {
+  const _HomeRequestCard({required this.row, required this.onTap});
 
-  final InspectionListRow row;
+  final HomeListRow row;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final tone = _statusToneColors(row.statusTone);
     final showSelectedChrome = row.selectedCard &&
-        row.statusTone != InspectionStatusTone.submitted;
+        row.statusTone != HomeStatusTone.submitted;
     final borderColor = showSelectedChrome
         ? ColorHelper.primaryBlue.withValues(alpha: 0.45)
         : ColorHelper.buttonOutline;
@@ -495,7 +547,7 @@ class _BottomActionsRow extends StatelessWidget {
             Expanded(
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  gradient: ColorHelper.authBarHorizontalGradient,
+                  color: ColorHelper.primaryBlue,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Material(

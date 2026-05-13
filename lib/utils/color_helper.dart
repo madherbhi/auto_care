@@ -24,6 +24,9 @@ class ColorHelper {
   /// Very light outline for secondary buttons.
   static const buttonOutline = Color(0xFFD8DADE);
 
+  /// Bright cyan for vehicle form actions (upload / save / update).
+  static const formActionCyan = Color(0xFF26C6DA);
+
   /// Full-screen auth gradient using only the Starting page palette
   /// ([primaryBlue], [accentYellow], [white] via interpolation).
   static final LinearGradient authScreenGradient = LinearGradient(

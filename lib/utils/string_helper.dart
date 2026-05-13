@@ -65,4 +65,31 @@ class StringHelper {
   static const String navRequests = "Requests";
   static const String navReports = "Reports";
   static const String navProfile = "Profile";
+
+  static const String addVehicleTitle = "Add Vehicle";
+  static const String vehicleDetailTitle = "Vehicle Details";
+  static const String vehicleNoLabel = "Vehicle No";
+  static const String vehicleTypeLabel = "Type";
+  static const String locationLabel = "Location";
+  static const String ownerContactLabel = "Owner Contact No";
+  static const String userNameFromTableLabel = "User Name (from user table)";
+  static const String enterUserName = "Enter user name";
+  static const String captureVideo = "Capture Video";
+  static const String capturePhoto = "Capture Photo";
+  static const String uploadLicence = "Upload Licence";
+  static const String captureVideoFirst = "Please capture the video first.";
+  static const String captureSixImagesFirst =
+      "Please capture all 6 photos before uploading the licence.";
+  static const String maxImagesReached = "You can capture up to 6 photos only.";
+  static const String licencePreview = "Licence Preview";
+  static const String enterVehicleNo = "Enter vehicle number";
+  static const String enterVehicleType = "Enter vehicle type";
+  static const String enterLocation = "Enter location";
+  static const String enterOwnerName = "Enter owner name";
+  static const String enterOwnerContact = "Enter owner contact";
+  static const String save = "Save";
+  static const String cancel = "Cancel";
+  static const String update = "Update";
+  static const String videoClipPreview = "Video Clip Preview";
+  static const String selectUserName = "Select user name";
 }

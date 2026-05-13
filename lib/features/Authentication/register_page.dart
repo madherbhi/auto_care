@@ -1,4 +1,5 @@
 import 'package:auto_care/constants/app_layout.dart';
+import 'package:auto_care/features/Home/home_page.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
@@ -231,10 +232,18 @@ class _RegisterPageState extends State<RegisterPage> {
                                 label: StringHelper.registerSignUp,
                                 foreground: ColorHelper.primaryBlue,
                                 onPressed: () {
-                                  if (_formKey.currentState?.validate() ??
-                                      false) {
-                                    FocusScope.of(context).unfocus();
+                                  if (!(_formKey.currentState?.validate() ??
+                                      false)) {
+                                    return;
                                   }
+                                  FocusScope.of(context).unfocus();
+                                  Navigator.of(context).pushAndRemoveUntil(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) =>
+                                          const HomeRequestListPage(),
+                                    ),
+                                    (_) => false,
+                                  );
                                 },
                               ),
                               Gap(gapMed),
