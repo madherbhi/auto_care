@@ -1,13 +1,10 @@
 import 'package:auto_care/constants/app_layout.dart';
-import 'package:auto_care/features/vehicle/vehicle_form_media_state.dart';
+import 'package:auto_care/models/vehicle_record_list_model.dart';
+import 'package:auto_care/features/vehicle/vehicle_form_body.dart';
 import 'package:auto_care/features/vehicle/vehicle_form_widgets.dart';
-import 'package:auto_care/utils/media_helper.dart';
-import 'package:auto_care/features/models/vehicle_record_list_model.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
-import 'package:auto_care/widgets/auth_shell.dart';
 import 'package:flutter/material.dart';
-import 'package:gap/gap.dart';
 
 class VehicleDetailPage extends StatefulWidget {
   const VehicleDetailPage({super.key, required this.vehicle});
@@ -19,92 +16,16 @@ class VehicleDetailPage extends StatefulWidget {
 }
 
 class _VehicleDetailPageState extends State<VehicleDetailPage> {
-  late final TextEditingController _vehicleNo;
-  late final TextEditingController _type;
-  late final TextEditingController _location;
-  late final TextEditingController _ownerName;
-  late final TextEditingController _ownerContact;
-  late final TextEditingController _userName;
+  final _formKey = GlobalKey<FormState>();
+  final _formBodyKey = GlobalKey<VehicleFormBodyState>();
 
-  late VehicleFormMediaState _media;
-
-  @override
-  void initState() {
-    super.initState();
-    final v = widget.vehicle;
-    _vehicleNo = TextEditingController(text: v.vehicleNo);
-    _type = TextEditingController(text: v.type);
-    _location = TextEditingController(text: v.location);
-    _ownerName = TextEditingController(text: v.ownerName);
-    _ownerContact = TextEditingController(text: v.ownerContact);
-    _userName = TextEditingController(text: v.userName);
-    _media = VehicleFormMediaState(
-      videoPath: v.videoPath,
-      imagePaths: v.imagePaths,
-      licenceImagePath: v.licenceImagePath,
-    );
-  }
-
-  @override
-  void dispose() {
-    _vehicleNo.dispose();
-    _type.dispose();
-    _location.dispose();
-    _ownerName.dispose();
-    _ownerContact.dispose();
-    _userName.dispose();
-    super.dispose();
-  }
-
-  Future<void> _captureVideo() async {
-    final path = await MediaHelper.captureVideo();
-    if (path == null || !mounted) return;
-    setState(() => _media.videoPath = path);
-  }
-
-  Future<void> _capturePhoto() async {
-    if (_media.videoPath == null) return;
-    final blocked = _media.photoBlockedMessage();
-    if (blocked != null) {
-      showVehicleFormSnack(context, blocked);
-      return;
-    }
-    final path = await MediaHelper.captureImage();
-    if (path == null || !mounted) return;
-    setState(() => _media.imagePaths.add(path));
-  }
-
-  Future<void> _uploadLicence() async {
-    if (_media.videoPath == null) return;
-    final blocked = _media.licenceBlockedMessage();
-    if (blocked != null) {
-      showVehicleFormSnack(context, blocked);
-      return;
-    }
-    final path = await MediaHelper.pickLicenceImage(context);
-    if (path == null || !mounted) return;
-    setState(() => _media.licenceImagePath = path);
-  }
-
-  void _onUpdate() {
-    Navigator.of(context).pop(
-      _media.toRecord(
-        vehicleNo: _vehicleNo.text.trim(),
-        type: _type.text.trim(),
-        location: _location.text.trim(),
-        ownerName: _ownerName.text.trim(),
-        ownerContact: _ownerContact.text.trim(),
-        userName: _userName.text.trim(),
-      ),
-    );
-  }
+  void _onUpdate() => _formBodyKey.currentState?.submit();
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     final padH = AuthResponsive.horizontalPadding(size.width);
     final padV = AuthResponsive.verticalPadding(size.height);
-    final gapLarge = AuthResponsive.gapFieldBlock(size.height);
     final scrollBottomPad = MediaQuery.viewInsetsOf(context).bottom;
 
     return Scaffold(
@@ -129,88 +50,12 @@ class _VehicleDetailPageState extends State<VehicleDetailPage> {
                     constraints: BoxConstraints(
                       maxWidth: AuthResponsive.formMaxWidth(size.width),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        AuthLoginField(
-                          label: StringHelper.vehicleNoLabel,
-                          hint: StringHelper.enterVehicleNo,
-                          controller: _vehicleNo,
-                          prefixIcon: Icons.directions_car_outlined,
-                          textInputAction: TextInputAction.next,
-                        ),
-                        Gap(gapLarge),
-                        AuthLoginField(
-                          label: StringHelper.vehicleTypeLabel,
-                          hint: StringHelper.enterVehicleType,
-                          controller: _type,
-                          prefixIcon: Icons.category_outlined,
-                          textInputAction: TextInputAction.next,
-                        ),
-                        Gap(gapLarge),
-                        AuthLoginField(
-                          label: StringHelper.locationLabel,
-                          hint: StringHelper.enterLocation,
-                          controller: _location,
-                          prefixIcon: Icons.location_on_outlined,
-                          textInputAction: TextInputAction.next,
-                        ),
-                        Gap(gapLarge),
-                        AuthLoginField(
-                          label: StringHelper.ownerNameLine,
-                          hint: StringHelper.enterOwnerName,
-                          controller: _ownerName,
-                          prefixIcon: Icons.person_outline_rounded,
-                          textInputAction: TextInputAction.next,
-                        ),
-                        Gap(gapLarge),
-                        AuthLoginField(
-                          label: StringHelper.ownerContactLabel,
-                          hint: StringHelper.enterOwnerContact,
-                          controller: _ownerContact,
-                          prefixIcon: Icons.phone_outlined,
-                          keyboardType: TextInputType.phone,
-                          textInputAction: TextInputAction.next,
-                        ),
-                        Gap(gapLarge),
-                        AuthLoginField(
-                          label: StringHelper.userNameFromTableLabel,
-                          hint: StringHelper.enterUserName,
-                          controller: _userName,
-                          prefixIcon: Icons.account_circle_outlined,
-                          textInputAction: TextInputAction.done,
-                        ),
-                        Gap(gapLarge),
-                        VehicleVideoPreview(
-                          videoPath: _media.videoPath,
-                          ownerContact: _ownerContact.text.trim(),
-                        ),
-                        Gap(gapLarge * 0.5),
-                        VehicleMediaActionButton(
-                          label: StringHelper.captureVideo,
-                          onPressed: _captureVideo,
-                        ),
-                        Gap(gapLarge),
-                        VehicleImageSlotGrid(
-                          imagePaths: _media.imagePaths,
-                          onSlotTap: _capturePhoto,
-                        ),
-                        Gap(gapLarge * 0.5),
-                        VehicleMediaActionButton(
-                          label: StringHelper.capturePhoto,
-                          onPressed: _capturePhoto,
-                        ),
-                        Gap(gapLarge),
-                        VehicleLicencePreview(
-                          licenceImagePath: _media.licenceImagePath,
-                          onTap: _uploadLicence,
-                        ),
-                        Gap(gapLarge * 0.5),
-                        VehicleMediaActionButton(
-                          label: StringHelper.uploadLicence,
-                          onPressed: _uploadLicence,
-                        ),
-                      ],
+                    child: VehicleFormBody(
+                      key: _formBodyKey,
+                      formKey: _formKey,
+                      initial: widget.vehicle,
+                      onSubmit: (record) =>
+                          Navigator.of(context).pop(record),
                     ),
                   ),
                 ),

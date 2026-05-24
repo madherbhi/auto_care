@@ -15,7 +15,7 @@ class StringHelper {
   static const String easySimple = "Easy & Simple";
   static const String copyright =
       "© 2024 GN Value Inspect. All rights reserved.";
-  static const String appName = "Auto Care";
+  static const String appName = "GNVI";
 
   static const String username = "USERNAME";
   static const String password = "PASSWORD";
@@ -79,28 +79,76 @@ class StringHelper {
 
   static const String addVehicleTitle = "Add Vehicle";
   static const String vehicleDetailTitle = "Vehicle Details";
-  static const String vehicleNoLabel = "Vehicle No";
-  static const String vehicleTypeLabel = "Type";
+  static const String segmentTypeLabel = "Segment Type";
+  static const String caseTypeLabel = "Case Type";
+  static const String selectCaseType = "Select case type";
+  static const String vehicleNoLabel = "Vehicle Number";
+  static const String vehicleMakeLabel = "Vehicle Make";
+  static const String vehicleModelLabel = "Vehicle Model";
   static const String locationLabel = "Location";
-  static const String ownerContactLabel = "Owner Contact No";
-  static const String userNameFromTableLabel = "User Name (from user table)";
-  static const String enterUserName = "Enter user name";
+  static const String proposedOwnerNameLabel = "Proposed Owner Name";
+  static const String proposedOwnerContactLabel = "Proposed Owner Contact Number";
+  static const String userNameReadOnlyLabel = "User Name";
+  static const String vehicleImagesLabel = "Vehicle Images";
+  static const String rcUploadLabel = "RC (Registration Certificate)";
+  static const String rcFrontLabel = "RC Front Side";
+  static const String rcBackLabel = "RC Back Side";
+  static const String selectSegmentType = "Select segment type";
+  static const String enterVehicleNo = "Enter vehicle number";
+  static const String enterVehicleMake = "Enter vehicle make";
+  static const String enterVehicleModel = "Enter vehicle model";
+  static const String enterLocation = "Enter location";
+  static const String enterProposedOwnerName = "Enter proposed owner name";
+  static const String enterProposedOwnerContact = "Enter contact number";
+  static const String addVehicleImage = "Add Image";
   static const String captureVideo = "Capture Video";
   static const String capturePhoto = "Capture Photo";
-  static const String uploadLicence = "Upload Licence";
-  static const String captureVideoFirst = "Please capture the video first.";
-  static const String captureSixImagesFirst =
-      "Please capture all 6 photos before uploading the licence.";
-  static const String maxImagesReached = "You can capture up to 6 photos only.";
-  static const String licencePreview = "Licence Preview";
-  static const String enterVehicleNo = "Enter vehicle number";
-  static const String enterVehicleType = "Enter vehicle type";
-  static const String enterLocation = "Enter location";
-  static const String enterOwnerName = "Enter owner name";
-  static const String enterOwnerContact = "Enter owner contact";
+  static const String captureFromCamera = "Capture from camera";
+  static const String chooseFromGallery = "Choose from gallery";
+  static const String locationPermissionRequired =
+      "Location permission is required to stamp GPS details on vehicle photos.";
+  static const String cameraNotSupported =
+      "Camera capture is not supported on this platform.";
+  static const String cameraNotAvailable =
+      "Camera is not available on this device.";
+  static const String captureFailed = "Failed to capture photo. Please try again.";
+  static const String videoClipPreview = "Video Clip Preview";
+  static const String addMoreImages = "Add more";
+  static const String uploadRcFront = "Upload RC Front";
+  static const String uploadRcBack = "Upload RC Back";
+  static const String rcFrontPreview = "RC front preview";
+  static const String rcBackPreview = "RC back preview";
+  static const String segmentTypeRequired = "Please select segment type";
+  static const String caseTypeRequired = "Please select case type";
+  static const String vehicleNoRequired = "Vehicle number is required";
+  static const String vehicleNoInvalid =
+      "Enter a valid vehicle number (e.g. AP39FG8236)";
+  static const String vehicleMakeRequired = "Please enter vehicle make";
+  static const String vehicleModelRequired = "Please enter vehicle model";
+  static const String locationRequired = "Please enter location";
+  static const String proposedOwnerNameRequired =
+      "Please enter proposed owner name";
+  static const String contactNumberRequired = "Contact number is required";
+  static const String contactNumberInvalid =
+      "Enter a valid 10-digit mobile number";
+  static const String addAtLeastOneImage = "Add at least one vehicle image";
+  static const String uploadRcFrontRequired = "Upload RC front side image";
+  static const String uploadRcBackRequired = "Upload RC back side image";
   static const String save = "Save";
   static const String cancel = "Cancel";
   static const String update = "Update";
-  static const String videoClipPreview = "Video Clip Preview";
-  static const String selectUserName = "Select user name";
+  static const String removeImage = "Remove image";
+
+  static const List<String> segmentTypeOptions = [
+    'Car',
+    'Commercial vehicle',
+    'Construction Equipment',
+    'Tractor/ harvester',
+  ];
+
+  static const List<String> caseTypeOptions = [
+    'Valuation',
+    'Pre-inspection',
+    'Survey assessment',
+  ];
 }

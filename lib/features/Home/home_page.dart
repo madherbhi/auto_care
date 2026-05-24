@@ -1,7 +1,7 @@
 import 'package:auto_care/constants/app_layout.dart';
 import 'package:auto_care/features/vehicle/add_vehicle_page.dart';
 import 'package:auto_care/features/vehicle/vehicle_detail_page.dart';
-import 'package:auto_care/features/models/vehicle_record_list_model.dart';
+import 'package:auto_care/models/vehicle_record_list_model.dart';
 import 'package:auto_care/starting_page.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
@@ -100,7 +100,10 @@ class _HomeRequestListPageState extends State<HomeRequestListPage> {
     return kSampleVehiclesByRegNo[row.registrationNumber] ??
         VehicleRecord(
           vehicleNo: row.registrationNumber,
-          type: 'CAR',
+          segmentType: 'Car',
+          caseType: 'Valuation',
+          vehicleMake: '',
+          vehicleModel: '',
           location: '',
           ownerName: row.ownerName,
           ownerContact: '',

@@ -1,12 +1,12 @@
 import 'dart:io';
 
 import 'package:auto_care/constants/app_layout.dart';
-import 'package:auto_care/utils/media_helper.dart';
 import 'package:auto_care/starting_page.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
 import 'package:auto_care/utils/navigation_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
+import 'package:auto_care/utils/user_session.dart';
 import 'package:auto_care/widgets/auth_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -58,6 +58,7 @@ class VehicleFormAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         IconButton(
           onPressed: () {
+            UserSession.clear();
             Navigator.of(context).pushAndRemoveUntil(
               appRoute<void>(const StartingPage()),
               (_) => false,
@@ -316,128 +317,418 @@ class _VehicleVideoPreviewState extends State<VehicleVideoPreview> {
   }
 }
 
+class VehicleFormSectionLabel extends StatelessWidget {
+  const VehicleFormSectionLabel({super.key, required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    return Padding(
+      padding: const EdgeInsets.only(left: AuthFieldLayout.labelInsetLeft),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontFamily: FontHelper.poppinsSemiBold,
+          color: ColorHelper.white.withValues(alpha: AuthFieldLayout.labelAlpha),
+          fontSize: AuthFieldResponsive.labelFontSize(w),
+          letterSpacing: AuthFieldLayout.labelLetterSpacing,
+          height: AuthFieldLayout.labelLineHeight,
+        ),
+      ),
+    );
+  }
+}
+
+/// Slots 1–5 use numbered placeholders; from the 6th cell onward a trailing
+/// “+ Add more” tile follows the last image and moves forward as images are added.
 class VehicleImageSlotGrid extends StatelessWidget {
   const VehicleImageSlotGrid({
     super.key,
     required this.imagePaths,
-    this.maxSlots = MediaHelper.maxImages,
-    this.onSlotTap,
+    required this.onAdd,
+    required this.onRemove,
   });
 
+  static const int initialSlots = 5;
+
   final List<String> imagePaths;
-  final int maxSlots;
-  final VoidCallback? onSlotTap;
+  final VoidCallback onAdd;
+  final ValueChanged<int> onRemove;
+
+  static const _gridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
+    crossAxisCount: 3,
+    mainAxisSpacing: 8,
+    crossAxisSpacing: 8,
+    childAspectRatio: 1,
+  );
 
   @override
   Widget build(BuildContext context) {
+    final count = imagePaths.length;
+    // Always reserve the cell after the last image for “+ Add more”.
+    final itemCount = count >= initialSlots ? count + 1 : initialSlots + 1;
+    final addMoreIndex = count >= initialSlots ? count : initialSlots;
+    final addMoreEnabled = count >= initialSlots;
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        mainAxisSpacing: 8,
-        crossAxisSpacing: 8,
-        childAspectRatio: 1,
-      ),
-      itemCount: maxSlots,
+      gridDelegate: _gridDelegate,
+      itemCount: itemCount,
       itemBuilder: (context, index) {
-        final hasImage = index < imagePaths.length;
-        final path = hasImage ? imagePaths[index] : null;
-        final slot = hasImage && path != null && File(path).existsSync()
-            ? Image.file(File(path), fit: BoxFit.cover)
-            : DecoratedBox(
-                decoration: BoxDecoration(
-                  color: Color.lerp(ColorHelper.primaryBlue, ColorHelper.white, 0.14)!
-                      .withValues(alpha: 0.35),
-                  border: Border.all(
-                    color: ColorHelper.white.withValues(alpha: 0.35),
-                  ),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.image_outlined,
-                      size: 28,
-                      color: ColorHelper.white.withValues(alpha: 0.75),
-                    ),
-                    const Gap(4),
-                    Text(
-                      '${index + 1}',
-                      style: TextStyle(
-                        fontFamily: FontHelper.poppinsMedium,
-                        fontSize: 11,
-                        color: ColorHelper.white.withValues(alpha: 0.8),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: GestureDetector(
-            onTap: onSlotTap,
-            child: slot,
-          ),
+        if (index == addMoreIndex) {
+          return _AddMoreImageTile(
+            enabled: addMoreEnabled,
+            onTap: addMoreEnabled ? onAdd : null,
+          );
+        }
+        if (index < count) {
+          return _VehicleImageTile(
+            path: imagePaths[index],
+            slotNumber: index + 1,
+            onRemove: () => onRemove(index),
+            onTap: onAdd,
+          );
+        }
+        return _EmptyImageSlot(
+          slotNumber: index + 1,
+          onTap: index == count ? onAdd : null,
         );
       },
     );
   }
 }
 
-class VehicleLicencePreview extends StatelessWidget {
-  const VehicleLicencePreview({
-    super.key,
-    this.licenceImagePath,
+/// “+ Add more” cell — fixed at slot 6 until five images exist, then trails the grid.
+class _AddMoreImageTile extends StatelessWidget {
+  const _AddMoreImageTile({
+    required this.enabled,
     this.onTap,
   });
 
-  final String? licenceImagePath;
+  final bool enabled;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final hasImage =
-        licenceImagePath != null && File(licenceImagePath!).existsSync();
-    final preview = hasImage
-        ? Image.file(File(licenceImagePath!), fit: BoxFit.cover)
-        : DecoratedBox(
-            decoration: BoxDecoration(
-              color: Color.lerp(ColorHelper.primaryBlue, ColorHelper.white, 0.14)!
-                  .withValues(alpha: 0.35),
-              border: Border.all(
-                color: ColorHelper.white.withValues(alpha: 0.35),
-              ),
+    final content = DecoratedBox(
+      decoration: BoxDecoration(
+        color: Color.lerp(ColorHelper.primaryBlue, ColorHelper.white, 0.14)!
+            .withValues(alpha: enabled ? 0.45 : 0.25),
+        border: Border.all(
+          color: enabled
+              ? ColorHelper.white.withValues(alpha: 0.65)
+              : ColorHelper.white.withValues(alpha: 0.25),
+          width: enabled ? 1.5 : 1,
+        ),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.add_circle_outline_rounded,
+            size: 34,
+            color: ColorHelper.white.withValues(alpha: enabled ? 0.95 : 0.45),
+          ),
+          const Gap(6),
+          Text(
+            StringHelper.addMoreImages,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: FontHelper.poppinsSemiBold,
+              fontSize: 12,
+              color: ColorHelper.white.withValues(alpha: enabled ? 0.95 : 0.45),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.badge_outlined,
-                  size: 40,
-                  color: ColorHelper.white.withValues(alpha: 0.75),
-                ),
-                const Gap(8),
-                Text(
-                  StringHelper.licencePreview,
-                  style: TextStyle(
-                    fontFamily: FontHelper.poppinsMedium,
-                    fontSize: 14,
-                    color: ColorHelper.white.withValues(alpha: 0.85),
-                  ),
-                ),
-              ],
-            ),
-          );
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AuthFieldLayout.radius),
-      child: AspectRatio(
-        aspectRatio: 16 / 10,
-        child: GestureDetector(
-          onTap: onTap,
-          child: preview,
+          ),
+        ],
+      ),
+    );
+
+    return Opacity(
+      opacity: enabled ? 1 : 0.55,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: enabled && onTap != null
+            ? Material(
+                color: Colors.transparent,
+                child: InkWell(onTap: onTap, child: content),
+              )
+            : content,
+      ),
+    );
+  }
+}
+
+class _EmptyImageSlot extends StatelessWidget {
+  const _EmptyImageSlot({
+    required this.slotNumber,
+    this.onTap,
+  });
+
+  final int slotNumber;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final child = DecoratedBox(
+      decoration: BoxDecoration(
+        color: Color.lerp(ColorHelper.primaryBlue, ColorHelper.white, 0.14)!
+            .withValues(alpha: 0.35),
+        border: Border.all(
+          color: ColorHelper.white.withValues(alpha: 0.35),
         ),
       ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.image_outlined,
+            size: 28,
+            color: ColorHelper.white.withValues(alpha: 0.75),
+          ),
+          const Gap(4),
+          Text(
+            '$slotNumber',
+            style: TextStyle(
+              fontFamily: FontHelper.poppinsMedium,
+              fontSize: 11,
+              color: ColorHelper.white.withValues(alpha: 0.8),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: onTap != null
+          ? GestureDetector(onTap: onTap, child: child)
+          : Opacity(opacity: 0.45, child: child),
+    );
+  }
+}
+
+class _VehicleImageTile extends StatelessWidget {
+  const _VehicleImageTile({
+    required this.path,
+    required this.slotNumber,
+    required this.onRemove,
+    this.onTap,
+  });
+
+  final String path;
+  final int slotNumber;
+  final VoidCallback onRemove;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final file = File(path);
+    final image = file.existsSync()
+        ? Image.file(file, fit: BoxFit.cover, width: double.infinity, height: double.infinity)
+        : ColoredBox(
+            color: Color.lerp(ColorHelper.primaryBlue, ColorHelper.white, 0.14)!
+                .withValues(alpha: 0.35),
+            child: Icon(
+              Icons.broken_image_outlined,
+              color: ColorHelper.white.withValues(alpha: 0.7),
+            ),
+          );
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(10),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            image,
+            Positioned(
+              left: 6,
+              bottom: 6,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: ColorHelper.black.withValues(alpha: 0.55),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  child: Text(
+                    '$slotNumber',
+                    style: const TextStyle(
+                      fontFamily: FontHelper.poppinsMedium,
+                      color: ColorHelper.white,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 4,
+              right: 4,
+              child: Material(
+                color: ColorHelper.black.withValues(alpha: 0.55),
+                shape: const CircleBorder(),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: onRemove,
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.close_rounded,
+                      color: ColorHelper.white,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class VehicleRcUploadSection extends StatelessWidget {
+  const VehicleRcUploadSection({
+    super.key,
+    required this.frontPath,
+    required this.backPath,
+    required this.onUploadFront,
+    required this.onUploadBack,
+  });
+
+  final String? frontPath;
+  final String? backPath;
+  final VoidCallback onUploadFront;
+  final VoidCallback onUploadBack;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        VehicleRcSideCard(
+          label: StringHelper.rcFrontLabel,
+          previewHint: StringHelper.rcFrontPreview,
+          imagePath: frontPath,
+          uploadLabel: StringHelper.uploadRcFront,
+          onUpload: onUploadFront,
+        ),
+        const Gap(12),
+        VehicleRcSideCard(
+          label: StringHelper.rcBackLabel,
+          previewHint: StringHelper.rcBackPreview,
+          imagePath: backPath,
+          uploadLabel: StringHelper.uploadRcBack,
+          onUpload: onUploadBack,
+        ),
+      ],
+    );
+  }
+}
+
+class VehicleRcSideCard extends StatelessWidget {
+  const VehicleRcSideCard({
+    super.key,
+    required this.label,
+    required this.previewHint,
+    required this.imagePath,
+    required this.uploadLabel,
+    required this.onUpload,
+  });
+
+  final String label;
+  final String previewHint;
+  final String? imagePath;
+  final String uploadLabel;
+  final VoidCallback onUpload;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasImage = imagePath != null && File(imagePath!).existsSync();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        VehicleFormSectionLabel(label: label),
+        const Gap(8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(AuthFieldLayout.radius),
+          child: AspectRatio(
+            aspectRatio: 16 / 10,
+            child: GestureDetector(
+              onTap: onUpload,
+              child: hasImage
+                  ? Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.file(File(imagePath!), fit: BoxFit.cover),
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: ColorHelper.black.withValues(alpha: 0.5),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Padding(
+                              padding: EdgeInsets.all(6),
+                              child: Icon(
+                                Icons.edit_outlined,
+                                color: ColorHelper.white,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Color.lerp(
+                          ColorHelper.primaryBlue,
+                          ColorHelper.white,
+                          0.14,
+                        )!
+                            .withValues(alpha: 0.35),
+                        border: Border.all(
+                          color: ColorHelper.white.withValues(alpha: 0.35),
+                        ),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.badge_outlined,
+                            size: 40,
+                            color: ColorHelper.white.withValues(alpha: 0.75),
+                          ),
+                          const Gap(8),
+                          Text(
+                            previewHint,
+                            style: TextStyle(
+                              fontFamily: FontHelper.poppinsMedium,
+                              fontSize: 14,
+                              color: ColorHelper.white.withValues(alpha: 0.85),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+            ),
+          ),
+        ),
+        const Gap(8),
+        VehicleMediaActionButton(
+          label: uploadLabel,
+          onPressed: onUpload,
+        ),
+      ],
     );
   }
 }

@@ -263,6 +263,7 @@ abstract final class AuthFieldLayout {
   static const double labelLetterSpacing = 1.6;
   static const double labelLineHeight = 1.2;
   static const double labelAlpha = 0.85;
+  static const double readOnlyTextAlpha = 0.72;
 
   static const double gapLabelToFieldFraction = 0.028;
   static const double gapLabelToFieldMin = 8;

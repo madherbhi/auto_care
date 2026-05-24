@@ -2,6 +2,7 @@ import 'package:auto_care/constants/app_layout.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 
 class AuthGradientBackground extends StatelessWidget {
@@ -42,6 +43,10 @@ class AuthLoginField extends StatelessWidget {
     this.showVisibilityToggle = false,
     this.onVisibilityToggle,
     this.prefixIcon,
+    this.validator,
+    this.readOnly = false,
+    this.inputFormatters,
+    this.textCapitalization,
   }) : assert(
           !showVisibilityToggle || onVisibilityToggle != null,
           'onVisibilityToggle is required when showVisibilityToggle is true',
@@ -56,6 +61,10 @@ class AuthLoginField extends StatelessWidget {
   final bool showVisibilityToggle;
   final VoidCallback? onVisibilityToggle;
   final IconData? prefixIcon;
+  final FormFieldValidator<String>? validator;
+  final bool readOnly;
+  final List<TextInputFormatter>? inputFormatters;
+  final TextCapitalization? textCapitalization;
 
   static const _white = ColorHelper.white;
 
@@ -118,9 +127,17 @@ class AuthLoginField extends StatelessWidget {
           obscureText: obscureText,
           keyboardType: keyboardType,
           textInputAction: textInputAction,
+          readOnly: readOnly,
+          validator: validator,
+          inputFormatters: inputFormatters,
+          textCapitalization: textCapitalization ?? TextCapitalization.none,
           style: TextStyle(
             fontFamily: FontHelper.poppinsRegular,
-            color: _white,
+            color: _white.withValues(
+              alpha: readOnly
+                  ? AuthFieldLayout.readOnlyTextAlpha
+                  : 1,
+            ),
             fontSize: hintSize,
           ),
           cursorColor: _white,

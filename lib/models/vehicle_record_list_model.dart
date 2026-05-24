@@ -1,47 +1,69 @@
+import 'package:auto_care/models/vehicle_image_capture.dart';
+
 class VehicleRecord {
   const VehicleRecord({
     required this.vehicleNo,
-    required this.type,
+    required this.segmentType,
+    required this.caseType,
+    required this.vehicleMake,
+    required this.vehicleModel,
     required this.location,
     required this.ownerName,
     required this.ownerContact,
     required this.userName,
     this.videoPath,
     this.imagePaths = const [],
-    this.licenceImagePath,
+    this.imageMetadata = const [],
+    this.rcFrontPath,
+    this.rcBackPath,
   });
 
   final String vehicleNo;
-  final String type;
+  final String segmentType;
+  final String caseType;
+  final String vehicleMake;
+  final String vehicleModel;
   final String location;
   final String ownerName;
   final String ownerContact;
   final String userName;
   final String? videoPath;
   final List<String> imagePaths;
-  final String? licenceImagePath;
+  final List<VehicleImageMetadata> imageMetadata;
+  final String? rcFrontPath;
+  final String? rcBackPath;
 
   VehicleRecord copyWith({
     String? vehicleNo,
-    String? type,
+    String? segmentType,
+    String? caseType,
+    String? vehicleMake,
+    String? vehicleModel,
     String? location,
     String? ownerName,
     String? ownerContact,
     String? userName,
     String? videoPath,
     List<String>? imagePaths,
-    String? licenceImagePath,
+    List<VehicleImageMetadata>? imageMetadata,
+    String? rcFrontPath,
+    String? rcBackPath,
   }) {
     return VehicleRecord(
       vehicleNo: vehicleNo ?? this.vehicleNo,
-      type: type ?? this.type,
+      segmentType: segmentType ?? this.segmentType,
+      caseType: caseType ?? this.caseType,
+      vehicleMake: vehicleMake ?? this.vehicleMake,
+      vehicleModel: vehicleModel ?? this.vehicleModel,
       location: location ?? this.location,
       ownerName: ownerName ?? this.ownerName,
       ownerContact: ownerContact ?? this.ownerContact,
       userName: userName ?? this.userName,
       videoPath: videoPath ?? this.videoPath,
       imagePaths: imagePaths ?? this.imagePaths,
-      licenceImagePath: licenceImagePath ?? this.licenceImagePath,
+      imageMetadata: imageMetadata ?? this.imageMetadata,
+      rcFrontPath: rcFrontPath ?? this.rcFrontPath,
+      rcBackPath: rcBackPath ?? this.rcBackPath,
     );
   }
 }
@@ -50,7 +72,10 @@ class VehicleRecord {
 final Map<String, VehicleRecord> kSampleVehiclesByRegNo = {
   'AP39FG8236': const VehicleRecord(
     vehicleNo: 'AP39FG8236',
-    type: 'CAR',
+    segmentType: 'Car',
+    caseType: 'Valuation',
+    vehicleMake: 'Hyundai',
+    vehicleModel: 'i20',
     location: 'Vijayawada',
     ownerName: 'Mr. Kumar',
     ownerContact: '9876543210',
@@ -58,7 +83,10 @@ final Map<String, VehicleRecord> kSampleVehiclesByRegNo = {
   ),
   'AP39FG8237': const VehicleRecord(
     vehicleNo: 'AP39FG8237',
-    type: 'CAR',
+    segmentType: 'Car',
+    caseType: 'Pre-inspection',
+    vehicleMake: 'Maruti',
+    vehicleModel: 'Swift',
     location: 'Guntur',
     ownerName: 'Mr. Raju',
     ownerContact: '8987656765',
@@ -66,7 +94,10 @@ final Map<String, VehicleRecord> kSampleVehiclesByRegNo = {
   ),
   'TS10AB1234': const VehicleRecord(
     vehicleNo: 'TS10AB1234',
-    type: 'TRUCK',
+    segmentType: 'Commercial vehicle',
+    caseType: 'Survey assessment',
+    vehicleMake: 'Tata',
+    vehicleModel: 'LPT',
     location: 'Hyderabad',
     ownerName: 'Ms. Priya',
     ownerContact: '9123456780',
@@ -74,7 +105,10 @@ final Map<String, VehicleRecord> kSampleVehiclesByRegNo = {
   ),
   'KA05CD9999': const VehicleRecord(
     vehicleNo: 'KA05CD9999',
-    type: 'BIKE',
+    segmentType: 'Tractor/ harvester',
+    caseType: 'Valuation',
+    vehicleMake: 'Honda',
+    vehicleModel: 'Activa',
     location: 'Bangalore',
     ownerName: 'Mr. Ahmed',
     ownerContact: '9012345678',
@@ -82,7 +116,10 @@ final Map<String, VehicleRecord> kSampleVehiclesByRegNo = {
   ),
   'MH12XY0001': const VehicleRecord(
     vehicleNo: 'MH12XY0001',
-    type: 'CAR',
+    segmentType: 'Car',
+    caseType: 'Pre-inspection',
+    vehicleMake: 'Toyota',
+    vehicleModel: 'Innova',
     location: 'Mumbai',
     ownerName: 'Ms. Lee',
     ownerContact: '9988776655',
@@ -90,7 +127,10 @@ final Map<String, VehicleRecord> kSampleVehiclesByRegNo = {
   ),
   'TS08FE9076': const VehicleRecord(
     vehicleNo: 'TS08FE9076',
-    type: 'CAR',
+    segmentType: 'Car',
+    caseType: 'Survey assessment',
+    vehicleMake: 'Mahindra',
+    vehicleModel: 'XUV700',
     location: 'Hyderabad',
     ownerName: 'Mr. Madhu',
     ownerContact: '8987656765',

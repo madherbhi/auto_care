@@ -6,6 +6,7 @@ import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
 import 'package:auto_care/utils/navigation_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
+import 'package:auto_care/utils/user_session.dart';
 import 'package:auto_care/widgets/auth_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -187,6 +188,7 @@ class _LoginPageState extends State<LoginPage> {
                                     return;
                                   }
                                   FocusScope.of(context).unfocus();
+                                  UserSession.setUserName(_username.text);
                                   Navigator.of(context).pushAndRemoveUntil(
                                     appRoute<void>(const HomeRequestListPage()),
                                     (_) => false,
