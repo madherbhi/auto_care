@@ -14,12 +14,6 @@ class VehicleFormMediaState {
   final List<String> imagePaths;
   String? licenceImagePath;
 
-  bool get canCapturePhoto =>
-      videoPath != null && imagePaths.length < MediaHelper.maxImages;
-
-  bool get canUploadLicence =>
-      videoPath != null && imagePaths.length >= MediaHelper.maxImages;
-
   VehicleRecord toRecord({
     required String vehicleNo,
     required String type,
@@ -42,7 +36,6 @@ class VehicleFormMediaState {
   }
 
   String? photoBlockedMessage() {
-    if (videoPath == null) return StringHelper.captureVideoFirst;
     if (imagePaths.length >= MediaHelper.maxImages) {
       return StringHelper.maxImagesReached;
     }
@@ -50,7 +43,6 @@ class VehicleFormMediaState {
   }
 
   String? licenceBlockedMessage() {
-    if (videoPath == null) return StringHelper.captureVideoFirst;
     if (imagePaths.length < MediaHelper.maxImages) {
       return StringHelper.captureSixImagesFirst;
     }

@@ -43,6 +43,7 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
   }
 
   Future<void> _capturePhoto() async {
+    if (_media.videoPath == null) return;
     final blocked = _media.photoBlockedMessage();
     if (blocked != null) {
       showVehicleFormSnack(context, blocked);
@@ -54,6 +55,7 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
   }
 
   Future<void> _uploadLicence() async {
+    if (_media.videoPath == null) return;
     final blocked = _media.licenceBlockedMessage();
     if (blocked != null) {
       showVehicleFormSnack(context, blocked);
@@ -166,21 +168,23 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
                           onPressed: _captureVideo,
                         ),
                         Gap(gapLarge),
-                        VehicleImageSlotGrid(imagePaths: _media.imagePaths),
+                        VehicleImageSlotGrid(
+                          imagePaths: _media.imagePaths,
+                          onSlotTap: _capturePhoto,
+                        ),
                         Gap(gapLarge * 0.5),
                         VehicleMediaActionButton(
                           label: StringHelper.capturePhoto,
-                          enabled: _media.canCapturePhoto,
                           onPressed: _capturePhoto,
                         ),
                         Gap(gapLarge),
                         VehicleLicencePreview(
                           licenceImagePath: _media.licenceImagePath,
+                          onTap: _uploadLicence,
                         ),
                         Gap(gapLarge * 0.5),
                         VehicleMediaActionButton(
                           label: StringHelper.uploadLicence,
-                          enabled: _media.canUploadLicence,
                           onPressed: _uploadLicence,
                         ),
                       ],

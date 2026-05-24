@@ -1,63 +1,53 @@
 import 'package:auto_care/constants/app_layout.dart';
-import 'package:auto_care/features/Home/home_page.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
-import 'package:auto_care/utils/navigation_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
 import 'package:auto_care/widgets/auth_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 
-class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+class ForgotPasswordPage extends StatefulWidget {
+  const ForgotPasswordPage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
-  static const List<String> _banks = [
-    'Axis Bank',
-    'HDFC Bank',
-    'ICICI Bank',
-    'State Bank of India',
-  ];
-
-  static const Map<String, List<String>> _bankIdsByBank = {
-    'Axis Bank': ['AXIS-MUM-001', 'AXIS-DEL-042', 'AXIS-BLR-108'],
-    'HDFC Bank': ['HDFC-HO-9001', 'HDFC-PUN-2204'],
-    'ICICI Bank': ['ICICI-CHN-5510', 'ICICI-HYD-3302', 'ICICI-KOL-7711'],
-    'State Bank of India': ['SBI-NEW-0001', 'SBI-MUM-0144'],
-  };
-
-  final _userName = TextEditingController();
-  final _password = TextEditingController();
-  final _mobile = TextEditingController();
+class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _email = TextEditingController();
+  final _newPassword = TextEditingController();
+  final _confirmPassword = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-
-  String? _selectedBank;
-  String? _selectedBankId;
-  bool _obscurePassword = true;
-
-  List<String> get _bankIdOptions =>
-      _selectedBank != null ? (_bankIdsByBank[_selectedBank] ?? []) : [];
+  bool _obscureNewPassword = true;
+  bool _obscureConfirmPassword = true;
 
   @override
   void dispose() {
-    _userName.dispose();
-    _password.dispose();
-    _mobile.dispose();
     _email.dispose();
+    _newPassword.dispose();
+    _confirmPassword.dispose();
     super.dispose();
   }
 
-  void _onBankChanged(String? bank) {
-    setState(() {
-      _selectedBank = bank;
-      _selectedBankId = null;
-    });
+  void _onSubmit() {
+    if (_newPassword.text != _confirmPassword.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(StringHelper.passwordsDoNotMatch),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    FocusScope.of(context).unfocus();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(StringHelper.passwordResetSuccess),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+    Navigator.of(context).maybePop();
   }
 
   @override
@@ -68,16 +58,11 @@ class _RegisterPageState extends State<RegisterPage> {
     final w = size.width;
     final h = size.height;
     final gapLarge = AuthResponsive.gapFieldBlock(h);
-    final gapMed = AuthResponsive.gapMedRegister(h);
-    final gapAfterFields = AuthResponsive.gapAfterFieldsRegister(h);
-    final titleSize = AuthResponsive.registerTitleSize(w);
+    final gapMed = AuthResponsive.gapMedLogin(h);
+    final gapAfterFields = AuthResponsive.gapAfterFieldsLogin(h);
+    final titleSize = AuthResponsive.loginTitleSize(w);
     final subtitleSize = AuthResponsive.authSubtitleSize(w);
     final scrollBottomPad = MediaQuery.viewInsetsOf(context).bottom;
-
-    final bankIdItems = _bankIdOptions;
-    final bankIdHint = bankIdItems.isEmpty
-        ? StringHelper.selectBankFirst
-        : StringHelper.selectBankId;
 
     return Scaffold(
       backgroundColor: ColorHelper.primaryBlue,
@@ -119,13 +104,14 @@ class _RegisterPageState extends State<RegisterPage> {
                 Expanded(
                   child: SingleChildScrollView(
                     padding: EdgeInsets.only(
-                      bottom: scrollBottomPad + AuthScreenLayout.scrollBottomExtra,
+                      bottom:
+                          scrollBottomPad + AuthScreenLayout.scrollBottomExtra,
                     ),
                     physics: const BouncingScrollPhysics(),
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
                         minHeight:
-                            h * AuthScreenLayout.registerFormMinHeightFraction,
+                            h * AuthScreenLayout.loginFormMinHeightFraction,
                       ),
                       child: Center(
                         child: ConstrainedBox(
@@ -137,19 +123,20 @@ class _RegisterPageState extends State<RegisterPage> {
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               Text(
-                                StringHelper.createAccount,
+                                StringHelper.forgotPasswordTitle,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontFamily: FontHelper.poppinsBold,
                                   color: ColorHelper.white,
                                   fontSize: titleSize,
                                   height: AuthScreenLayout.titleLineHeight,
-                                  letterSpacing: AuthScreenLayout.titleLetterSpacing,
+                                  letterSpacing:
+                                      AuthScreenLayout.titleLetterSpacing,
                                 ),
                               ),
                               Gap(AuthResponsive.gapAfterTitle(h)),
                               Text(
-                                StringHelper.registerFillDetails,
+                                StringHelper.forgotPasswordSubtitle,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontFamily: FontHelper.poppinsRegular,
@@ -160,38 +147,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                   height: AuthScreenLayout.subtitleLineHeight,
                                 ),
                               ),
-                              Gap(AuthResponsive.gapBeforeFieldsRegister(h)),
-                              AuthLoginField(
-                                label: StringHelper.username,
-                                hint: StringHelper.enterUsername,
-                                controller: _userName,
-                                prefixIcon: Icons.person_outline_rounded,
-                                textInputAction: TextInputAction.next,
-                                keyboardType: TextInputType.name,
-                              ),
-                              Gap(gapLarge),
-                              AuthLoginField(
-                                label: StringHelper.password,
-                                hint: StringHelper.enterPassword,
-                                controller: _password,
-                                prefixIcon: Icons.lock_outline_rounded,
-                                obscureText: _obscurePassword,
-                                showVisibilityToggle: true,
-                                onVisibilityToggle: () => setState(
-                                  () => _obscurePassword = !_obscurePassword,
-                                ),
-                                textInputAction: TextInputAction.next,
-                              ),
-                              Gap(gapLarge),
-                              AuthLoginField(
-                                label: StringHelper.mobile,
-                                hint: StringHelper.enterMobile,
-                                controller: _mobile,
-                                prefixIcon: Icons.phone_android_rounded,
-                                textInputAction: TextInputAction.next,
-                                keyboardType: TextInputType.phone,
-                              ),
-                              Gap(gapLarge),
+                              Gap(AuthResponsive.gapBeforeFieldsLogin(h)),
                               AuthLoginField(
                                 label: StringHelper.email,
                                 hint: StringHelper.enterEmail,
@@ -201,61 +157,53 @@ class _RegisterPageState extends State<RegisterPage> {
                                 keyboardType: TextInputType.emailAddress,
                               ),
                               Gap(gapLarge),
-                              AuthLoginDropdown(
-                                label: StringHelper.bankLabel,
-                                hint: StringHelper.selectBank,
-                                items: _banks,
-                                value: _selectedBank,
-                                prefixIcon: Icons.account_balance_outlined,
-                                onChanged: _onBankChanged,
-                                validator: (v) =>
-                                    v == null || v.isEmpty ? 'Required' : null,
+                              AuthLoginField(
+                                label: StringHelper.newPassword,
+                                hint: StringHelper.enterNewPassword,
+                                controller: _newPassword,
+                                prefixIcon: Icons.lock_outline_rounded,
+                                obscureText: _obscureNewPassword,
+                                showVisibilityToggle: true,
+                                onVisibilityToggle: () => setState(
+                                  () => _obscureNewPassword =
+                                      !_obscureNewPassword,
+                                ),
+                                textInputAction: TextInputAction.next,
                               ),
                               Gap(gapLarge),
-                              AuthLoginDropdown(
-                                label: StringHelper.bankIdLabel,
-                                hint: bankIdHint,
-                                items: bankIdItems,
-                                value: _selectedBankId,
-                                prefixIcon: Icons.tag_outlined,
-                                onChanged: bankIdItems.isEmpty
-                                    ? (_) {}
-                                    : (id) =>
-                                        setState(() => _selectedBankId = id),
-                                validator: bankIdItems.isEmpty
-                                    ? null
-                                    : (v) => v == null || v.isEmpty
-                                        ? 'Required'
-                                        : null,
+                              AuthLoginField(
+                                label: StringHelper.confirmPassword,
+                                hint: StringHelper.enterConfirmPassword,
+                                controller: _confirmPassword,
+                                prefixIcon: Icons.lock_outline_rounded,
+                                obscureText: _obscureConfirmPassword,
+                                showVisibilityToggle: true,
+                                onVisibilityToggle: () => setState(
+                                  () => _obscureConfirmPassword =
+                                      !_obscureConfirmPassword,
+                                ),
+                                textInputAction: TextInputAction.done,
                               ),
                               Gap(gapAfterFields),
                               AuthPillButton(
-                                label: StringHelper.registerSignUp,
+                                label: StringHelper.resetPassword,
                                 foreground: ColorHelper.primaryBlue,
-                                onPressed: () {
-                                  if (!(_formKey.currentState?.validate() ??
-                                      false)) {
-                                    return;
-                                  }
-                                  FocusScope.of(context).unfocus();
-                                  Navigator.of(context).pushAndRemoveUntil(
-                                    appRoute<void>(const HomeRequestListPage()),
-                                    (_) => false,
-                                  );
-                                },
+                                onPressed: _onSubmit,
                               ),
                               Gap(gapMed),
                               Center(
                                 child: Wrap(
                                   alignment: WrapAlignment.center,
-                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  crossAxisAlignment:
+                                      WrapCrossAlignment.center,
                                   children: [
                                     Text(
-                                      StringHelper.alreadyHaveAccountPrompt,
+                                      StringHelper.backToLoginPrompt,
                                       textAlign: TextAlign.center,
                                       style: FontHelper.taglineSmall(
                                         ColorHelper.white.withValues(
-                                          alpha: AuthScreenLayout.linkPromptAlpha,
+                                          alpha:
+                                              AuthScreenLayout.linkPromptAlpha,
                                         ),
                                       ),
                                     ),

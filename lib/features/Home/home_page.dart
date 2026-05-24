@@ -5,6 +5,7 @@ import 'package:auto_care/features/models/vehicle_record_list_model.dart';
 import 'package:auto_care/starting_page.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
+import 'package:auto_care/utils/navigation_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -109,7 +110,7 @@ class _HomeRequestListPageState extends State<HomeRequestListPage> {
 
   Future<void> _openAddVehicle() async {
     final result = await Navigator.of(context).push<VehicleRecord>(
-      MaterialPageRoute(builder: (_) => const AddVehiclePage()),
+      appRoute(const AddVehiclePage()),
     );
     if (result == null || !mounted) return;
     kSampleVehiclesByRegNo[result.vehicleNo] = result;
@@ -131,9 +132,7 @@ class _HomeRequestListPageState extends State<HomeRequestListPage> {
   Future<void> _openVehicleDetail(HomeListRow row) async {
     final initial = _vehicleForRow(row);
     final result = await Navigator.of(context).push<VehicleRecord>(
-      MaterialPageRoute(
-        builder: (_) => VehicleDetailPage(vehicle: initial),
-      ),
+      appRoute(VehicleDetailPage(vehicle: initial)),
     );
     if (result == null || !mounted) return;
     kSampleVehiclesByRegNo[result.vehicleNo] = result;
@@ -219,7 +218,7 @@ class _HomeRequestListPageState extends State<HomeRequestListPage> {
               onAddNew: _openAddVehicle,
               onLogout: () {
                 Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute<void>(builder: (_) => const StartingPage()),
+                  appRoute<void>(const StartingPage()),
                   (_) => false,
                 );
               },

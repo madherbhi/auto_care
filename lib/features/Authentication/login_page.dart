@@ -1,8 +1,10 @@
 import 'package:auto_care/constants/app_layout.dart';
+import 'package:auto_care/features/Authentication/forgot_password_page.dart';
 import 'package:auto_care/features/Authentication/register_page.dart';
 import 'package:auto_care/features/Home/home_page.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
+import 'package:auto_care/utils/navigation_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
 import 'package:auto_care/widgets/auth_shell.dart';
 import 'package:flutter/material.dart';
@@ -149,7 +151,13 @@ class _LoginPageState extends State<LoginPage> {
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: GestureDetector(
-                                  onTap: () {},
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      appRoute<void>(
+                                        const ForgotPasswordPage(),
+                                      ),
+                                    );
+                                  },
                                   behavior: HitTestBehavior.opaque,
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(
@@ -180,10 +188,7 @@ class _LoginPageState extends State<LoginPage> {
                                   }
                                   FocusScope.of(context).unfocus();
                                   Navigator.of(context).pushAndRemoveUntil(
-                                    MaterialPageRoute<void>(
-                                      builder: (_) =>
-                                          const HomeRequestListPage(),
-                                    ),
+                                    appRoute<void>(const HomeRequestListPage()),
                                     (_) => false,
                                   );
                                 },
@@ -207,10 +212,7 @@ class _LoginPageState extends State<LoginPage> {
                                     GestureDetector(
                                       onTap: () {
                                         Navigator.of(context).push(
-                                          MaterialPageRoute<void>(
-                                            builder: (_) =>
-                                                const RegisterPage(),
-                                          ),
+                                          appRoute<void>(const RegisterPage()),
                                         );
                                       },
                                       child: Text(

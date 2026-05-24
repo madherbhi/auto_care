@@ -30,6 +30,17 @@ class StringHelper {
   static const String welcomeBack = "Welcome Back";
   static const String loginToContinue = "Login to continue to your account";
   static const String forgotPassword = "Forgot Password?";
+  static const String forgotPasswordTitle = "Forgot Password";
+  static const String forgotPasswordSubtitle =
+      "Enter your email and set a new password";
+  static const String newPassword = "NEW PASSWORD";
+  static const String confirmPassword = "CONFIRM PASSWORD";
+  static const String enterNewPassword = "Enter new password";
+  static const String enterConfirmPassword = "Confirm new password";
+  static const String resetPassword = "RESET PASSWORD";
+  static const String backToLoginPrompt = "Remember your password? ";
+  static const String passwordResetSuccess = "Password reset successfully.";
+  static const String passwordsDoNotMatch = "Passwords do not match";
 
   static const String userNameLabel = "User Name:";
   static const String passwordLabel = "Password:";
