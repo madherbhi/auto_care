@@ -6,15 +6,39 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-/// Collects live GPS, compass, and geocoding data for vehicle photo overlays.
+/// GPS, compass, and address data for vehicle photo overlays.
 class CaptureMetadataService {
   CaptureMetadataService._();
 
   static int _indexCounter = 21000;
 
   static int nextIndexNumber() => ++_indexCounter;
+
+  /// Text lines shown on camera preview and burned into the saved image.
+  static List<String> overlayLines(VehicleImageMetadata metadata) {
+    return [
+      DateFormat('dd/MM/yyyy h:mm a').format(metadata.capturedAt),
+      headingLabel(metadata.headingDegrees),
+      formatCoordinates(metadata.latitude, metadata.longitude),
+      formatLocationLine(metadata),
+      'Altitude:${formatAltitude(metadata.altitudeMeters)}',
+      'Speed:${formatSpeed(metadata.speedKmh)}',
+      'Index number: ${metadata.indexNumber}',
+    ];
+  }
+
+  static String formatAltitude(double? meters) {
+    if (meters == null) return '--m';
+    return '${meters.toStringAsFixed(1)}m';
+  }
+
+  static String formatSpeed(double? kmh) {
+    if (kmh == null) return '--km/h';
+    return '${kmh.toStringAsFixed(1)}km/h';
+  }
 
   static Future<bool> ensureLocationPermission() async {
     if (kIsWeb) return false;
@@ -38,7 +62,7 @@ class CaptureMetadataService {
 
   static Future<VehicleImageMetadata> collectSnapshot({
     int? indexNumber,
-    double? headingOverride,
+    double? headingDegrees,
   }) async {
     final capturedAt = DateTime.now();
     final index = indexNumber ?? nextIndexNumber();
@@ -47,12 +71,15 @@ class CaptureMetadataService {
     double? longitude;
     double? altitudeMeters;
     double? speedKmh;
-    double? heading = headingOverride;
+    double? heading = headingDegrees;
     String? city;
     String? pincode;
     String? addressLine;
 
-    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS || Platform.isMacOS)) {
+    final canReadLocation = !kIsWeb &&
+        (Platform.isAndroid || Platform.isIOS || Platform.isMacOS);
+
+    if (canReadLocation) {
       final hasPermission = await ensureLocationPermission();
       if (hasPermission && await isLocationServiceEnabled()) {
         try {
@@ -62,6 +89,7 @@ class CaptureMetadataService {
               timeLimit: Duration(seconds: 8),
             ),
           );
+
           latitude = position.latitude;
           longitude = position.longitude;
           altitudeMeters = position.altitude;
@@ -72,31 +100,32 @@ class CaptureMetadataService {
             heading = position.heading;
           }
 
-          final lat = latitude;
-          final lng = longitude;
-          final placemarks = await placemarkFromCoordinates(lat, lng);
-            if (placemarks.isNotEmpty) {
-              final place = placemarks.first;
-              city = _firstNonEmpty([
-                place.locality,
-                place.subAdministrativeArea,
-                place.administrativeArea,
-              ]);
-              pincode = place.postalCode;
-              addressLine = _firstNonEmpty([
-                place.street,
-                place.subLocality,
-                place.name,
-              ]);
-            }
+          final placemarks = await placemarkFromCoordinates(
+            latitude,
+            longitude,
+          );
+          if (placemarks.isNotEmpty) {
+            final place = placemarks.first;
+            city = _firstNonEmpty([
+              place.locality,
+              place.subAdministrativeArea,
+              place.administrativeArea,
+            ]);
+            pincode = place.postalCode;
+            addressLine = _firstNonEmpty([
+              place.street,
+              place.subLocality,
+              place.name,
+            ]);
+          }
         } catch (_) {
-          // Keep partial metadata when GPS/geocoding is unavailable.
+          // Keep whatever data we already have.
         }
       }
     }
 
     if (heading == null && !kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-      heading = await _readCurrentCompassHeading();
+      heading = await _readCompassOnce();
     }
 
     return VehicleImageMetadata(
@@ -113,15 +142,28 @@ class CaptureMetadataService {
     );
   }
 
-  static Future<double?> _readCurrentCompassHeading() async {
+  /// Live compass updates for the camera screen.
+  static Stream<double>? compassHeadingStream() {
+    if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) return null;
+    final events = FlutterCompass.events;
+    if (events == null) return null;
+
+    return events.map((event) => normalizeHeading(event.heading)).where((h) => h != null).cast<double>();
+  }
+
+  static double? normalizeHeading(double? heading) {
+    if (heading == null || heading.isNaN) return null;
+    if (heading < 0) return (360 + heading) % 360;
+    return heading % 360;
+  }
+
+  static Future<double?> _readCompassOnce() async {
     try {
-      if (FlutterCompass.events == null) return null;
-      final event = await FlutterCompass.events!.first.timeout(
-        const Duration(seconds: 2),
-      );
-      final value = event.heading;
-      if (value == null || value.isNaN) return null;
-      return value < 0 ? (360 + value) % 360 : value % 360;
+      final events = FlutterCompass.events;
+      if (events == null) return null;
+
+      final event = await events.first.timeout(const Duration(seconds: 2));
+      return normalizeHeading(event.heading);
     } catch (_) {
       return null;
     }
@@ -129,7 +171,9 @@ class CaptureMetadataService {
 
   static String? _firstNonEmpty(List<String?> values) {
     for (final value in values) {
-      if (value != null && value.trim().isNotEmpty) return value.trim();
+      if (value != null && value.trim().isNotEmpty) {
+        return value.trim();
+      }
     }
     return null;
   }
@@ -156,30 +200,5 @@ class CaptureMetadataService {
     if (city != null) return city;
     if (pincode != null) return pincode;
     return formatCoordinates(metadata.latitude, metadata.longitude);
-  }
-}
-
-/// Streams compass heading for live camera overlay.
-class CompassHeadingStream {
-  StreamSubscription<CompassEvent>? _subscription;
-  final _controller = StreamController<double>.broadcast();
-
-  Stream<double> get stream => _controller.stream;
-
-  void start() {
-    if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) return;
-    if (FlutterCompass.events == null) return;
-    _subscription?.cancel();
-    _subscription = FlutterCompass.events!.listen((event) {
-      final heading = event.heading;
-      if (heading == null || heading.isNaN) return;
-      final normalized = heading < 0 ? (360 + heading) % 360 : heading % 360;
-      _controller.add(normalized);
-    });
-  }
-
-  void dispose() {
-    _subscription?.cancel();
-    _controller.close();
   }
 }

@@ -91,8 +91,8 @@ class StringHelper {
   static const String userNameReadOnlyLabel = "User Name";
   static const String vehicleImagesLabel = "Vehicle Images";
   static const String rcUploadLabel = "RC (Registration Certificate)";
-  static const String rcFrontLabel = "RC Front Side";
-  static const String rcBackLabel = "RC Back Side";
+  static const String rcFrontLabel = "RC Front";
+  static const String rcBackLabel = "RC Back";
   static const String selectSegmentType = "Select segment type";
   static const String enterVehicleNo = "Enter vehicle number";
   static const String enterVehicleMake = "Enter vehicle make";
@@ -106,18 +106,20 @@ class StringHelper {
   static const String captureFromCamera = "Capture from camera";
   static const String chooseFromGallery = "Choose from gallery";
   static const String locationPermissionRequired =
-      "Location permission is required to stamp GPS details on vehicle photos.";
+      "Location permission is required to stamp GPS details on vehicle photos and videos.";
   static const String cameraNotSupported =
       "Camera capture is not supported on this platform.";
   static const String cameraNotAvailable =
       "Camera is not available on this device.";
   static const String captureFailed = "Failed to capture photo. Please try again.";
-  static const String videoClipPreview = "Video Clip Preview";
+  static const String videoCaptureFailed =
+      "Failed to capture video. Please try again.";
+  static const String videoClipPreview = "Video Clip";
   static const String addMoreImages = "Add more";
   static const String uploadRcFront = "Upload RC Front";
   static const String uploadRcBack = "Upload RC Back";
-  static const String rcFrontPreview = "RC front preview";
-  static const String rcBackPreview = "RC back preview";
+  static const String rcFrontPreview = "RC front";
+  static const String rcBackPreview = "RC back";
   static const String segmentTypeRequired = "Please select segment type";
   static const String caseTypeRequired = "Please select case type";
   static const String vehicleNoRequired = "Vehicle number is required";

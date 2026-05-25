@@ -5,16 +5,16 @@ import 'package:auto_care/features/vehicle/capture_overlay_widgets.dart';
 import 'package:auto_care/models/vehicle_image_capture.dart';
 import 'package:auto_care/utils/capture_metadata_service.dart';
 import 'package:auto_care/utils/color_helper.dart';
-import 'package:auto_care/utils/image_stamp_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
+import 'package:auto_care/utils/video_stamp_helper.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Full-screen camera with GPS/compass overlays. Returns a stamped image.
-class VehicleCameraCapturePage extends StatefulWidget {
-  const VehicleCameraCapturePage({
+/// Full-screen video camera with GPS/compass overlays. Returns a stamped video path.
+class VehicleVideoCapturePage extends StatefulWidget {
+  const VehicleVideoCapturePage({
     super.key,
     required this.indexNumber,
   });
@@ -22,16 +22,17 @@ class VehicleCameraCapturePage extends StatefulWidget {
   final int indexNumber;
 
   @override
-  State<VehicleCameraCapturePage> createState() =>
-      _VehicleCameraCapturePageState();
+  State<VehicleVideoCapturePage> createState() =>
+      _VehicleVideoCapturePageState();
 }
 
-class _VehicleCameraCapturePageState extends State<VehicleCameraCapturePage> {
+class _VehicleVideoCapturePageState extends State<VehicleVideoCapturePage> {
   CameraController? _camera;
   VehicleImageMetadata? _metadata;
   double? _heading;
   bool _loading = true;
-  bool _capturing = false;
+  bool _recording = false;
+  bool _processing = false;
   String? _error;
   Timer? _metadataTimer;
   StreamSubscription<double>? _compassSubscription;
@@ -75,8 +76,7 @@ class _VehicleCameraCapturePageState extends State<VehicleCameraCapturePage> {
       final camera = CameraController(
         backCamera,
         ResolutionPreset.high,
-        enableAudio: false,
-        imageFormatGroup: ImageFormatGroup.jpeg,
+        enableAudio: true,
       );
       await camera.initialize();
 
@@ -122,38 +122,61 @@ class _VehicleCameraCapturePageState extends State<VehicleCameraCapturePage> {
     if (base == null) return null;
     return base.copyWith(
       headingDegrees: _heading ?? base.headingDegrees,
+      capturedAt: DateTime.now(),
     );
   }
 
-  Future<void> _capturePhoto() async {
+  Future<void> _toggleRecording() async {
     final camera = _camera;
-    final metadata = _metadataForCapture;
     if (camera == null ||
         !camera.value.isInitialized ||
-        metadata == null ||
-        _capturing) {
+        _processing ||
+        _metadata == null) {
       return;
     }
 
-    setState(() => _capturing = true);
+    if (_recording) {
+      await _stopRecording();
+      return;
+    }
+
     try {
-      await camera.setFlashMode(FlashMode.off);
-      final photo = await camera.takePicture();
-      final stampedPath = await ImageStampHelper.stampVehicleImage(
-        sourcePath: photo.path,
+      await camera.startVideoRecording();
+      if (!mounted) return;
+      setState(() => _recording = true);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(StringHelper.videoCaptureFailed)),
+      );
+    }
+  }
+
+  Future<void> _stopRecording() async {
+    final camera = _camera;
+    final metadata = _metadataForCapture;
+    if (camera == null || metadata == null) return;
+
+    setState(() {
+      _recording = false;
+      _processing = true;
+    });
+
+    try {
+      final clip = await camera.stopVideoRecording();
+      final stampedPath = await VideoStampHelper.stampVehicleVideo(
+        sourcePath: clip.path,
         metadata: metadata,
       );
 
       if (!mounted) return;
-      Navigator.of(context).pop(
-        VehicleImageCapture(path: stampedPath, metadata: metadata),
-      );
+      Navigator.of(context).pop(stampedPath);
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(StringHelper.captureFailed)),
+        SnackBar(content: Text(StringHelper.videoCaptureFailed)),
       );
-      setState(() => _capturing = false);
+      setState(() => _processing = false);
     }
   }
 
@@ -169,6 +192,7 @@ class _VehicleCameraCapturePageState extends State<VehicleCameraCapturePage> {
   Widget build(BuildContext context) {
     final cameraReady =
         _camera != null && _camera!.value.isInitialized && _error == null;
+    final busy = _processing;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
@@ -214,11 +238,26 @@ class _VehicleCameraCapturePageState extends State<VehicleCameraCapturePage> {
                 child: Row(
                   children: [
                     IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: busy ? null : () => Navigator.of(context).pop(),
                       icon: const Icon(Icons.close_rounded, color: Colors.white),
                     ),
-                    const Spacer(),
-                    if (_capturing)
+                    if (_recording)
+                      const Expanded(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.fiber_manual_record, color: Colors.red, size: 14),
+                            SizedBox(width: 6),
+                            Text(
+                              'Recording',
+                              style: TextStyle(color: Colors.white, fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      const Spacer(),
+                    if (busy)
                       const Padding(
                         padding: EdgeInsets.only(right: 16),
                         child: SizedBox(
@@ -240,21 +279,29 @@ class _VehicleCameraCapturePageState extends State<VehicleCameraCapturePage> {
                   bottom: 20,
                   child: Center(
                     child: GestureDetector(
-                      onTap: _capturing ? null : _capturePhoto,
+                      onTap: busy ? null : _toggleRecording,
                       child: Container(
                         width: 72,
                         height: 72,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 4),
+                          border: Border.all(
+                            color: _recording ? Colors.red : Colors.white,
+                            width: 4,
+                          ),
                         ),
                         child: Center(
                           child: Container(
-                            width: 58,
-                            height: 58,
+                            width: _recording ? 28 : 58,
+                            height: _recording ? 28 : 58,
                             decoration: BoxDecoration(
-                              color: _capturing ? Colors.white54 : Colors.white,
-                              shape: BoxShape.circle,
+                              color: _recording
+                                  ? Colors.red
+                                  : (busy ? Colors.white54 : Colors.white),
+                              borderRadius: _recording
+                                  ? BorderRadius.circular(6)
+                                  : null,
+                              shape: _recording ? BoxShape.rectangle : BoxShape.circle,
                             ),
                           ),
                         ),

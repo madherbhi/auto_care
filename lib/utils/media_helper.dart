@@ -1,9 +1,11 @@
 import 'dart:io';
 
 import 'package:auto_care/features/vehicle/vehicle_camera_capture_page.dart';
+import 'package:auto_care/features/vehicle/vehicle_video_capture_page.dart';
 import 'package:auto_care/models/vehicle_image_capture.dart';
 import 'package:auto_care/utils/capture_metadata_service.dart';
 import 'package:auto_care/utils/image_stamp_helper.dart';
+import 'package:auto_care/utils/video_stamp_helper.dart';
 import 'package:auto_care/utils/navigation_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
 import 'package:flutter/foundation.dart';
@@ -37,6 +39,7 @@ class MediaHelper {
       final result = await Permission.photos.request();
       if (result.isGranted || result.isLimited) return true;
     }
+
     final storage = await Permission.storage.status;
     if (storage.isGranted) return true;
     final storageResult = await Permission.storage.request();
@@ -70,10 +73,6 @@ class MediaHelper {
     );
   }
 
-  static Future<ImageSource?> _pickImageSource(BuildContext context) {
-    return pickVehicleImageSource(context);
-  }
-
   static Future<String?> captureVideo() async {
     if (!await _ensureCameraPermission() ||
         !await _ensureMicrophonePermission()) {
@@ -81,6 +80,45 @@ class MediaHelper {
     }
     final file = await _picker.pickVideo(source: ImageSource.camera);
     return file?.path;
+  }
+
+  /// Opens the video camera with GPS overlays and burns metadata into the clip.
+  static Future<String?> captureVehicleVideo(
+    BuildContext context, {
+    required int indexNumber,
+  }) async {
+    if (!context.mounted) return null;
+    if (!await _ensureCameraPermission() ||
+        !await _ensureMicrophonePermission()) {
+      return null;
+    }
+
+    final locationGranted =
+        await CaptureMetadataService.ensureLocationPermission();
+    if (!locationGranted && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(StringHelper.locationPermissionRequired)),
+      );
+    }
+    if (!context.mounted) return null;
+
+    final useCustomCamera = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+    if (useCustomCamera) {
+      return Navigator.of(context).push<String>(
+        appRoute(VehicleVideoCapturePage(indexNumber: indexNumber)),
+      );
+    }
+
+    final path = await captureVideo();
+    if (path == null) return null;
+
+    final metadata = await CaptureMetadataService.collectSnapshot(
+      indexNumber: indexNumber,
+    );
+    return VideoStampHelper.stampVehicleVideo(
+      sourcePath: path,
+      metadata: metadata,
+    );
   }
 
   static Future<String?> captureImage() async {
@@ -96,39 +134,31 @@ class MediaHelper {
   }
 
   static Future<String?> pickImage(BuildContext context) async {
-    final source = await _pickImageSource(context);
+    final source = await pickVehicleImageSource(context);
     if (source == null) return null;
     if (source == ImageSource.camera) return captureImage();
     return pickImageFromGallery();
   }
 
-  /// Opens the camera, stamps metadata overlay, and returns the capture result.
+  /// Opens camera (or falls back to image picker), stamps metadata, returns result.
   static Future<VehicleImageCapture?> captureVehicleImage(
     BuildContext context, {
     required int indexNumber,
   }) async {
     if (!context.mounted) return null;
-    return _captureWithCustomCamera(context, indexNumber);
-  }
-
-  static Future<VehicleImageCapture?> _captureWithCustomCamera(
-    BuildContext context,
-    int indexNumber,
-  ) async {
     if (!await _ensureCameraPermission()) return null;
 
-    final locationGranted = await CaptureMetadataService.ensureLocationPermission();
+    final locationGranted =
+        await CaptureMetadataService.ensureLocationPermission();
     if (!locationGranted && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(StringHelper.locationPermissionRequired)),
       );
     }
-
     if (!context.mounted) return null;
 
-    final canUseCustomCamera =
-        !kIsWeb && (Platform.isAndroid || Platform.isIOS);
-    if (canUseCustomCamera) {
+    final useCustomCamera = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+    if (useCustomCamera) {
       return Navigator.of(context).push<VehicleImageCapture>(
         appRoute(VehicleCameraCapturePage(indexNumber: indexNumber)),
       );
@@ -136,18 +166,12 @@ class MediaHelper {
 
     final path = await captureImage();
     if (path == null) return null;
-    return _stampExistingImage(path, indexNumber);
-  }
 
-  static Future<VehicleImageCapture> _stampExistingImage(
-    String sourcePath,
-    int indexNumber,
-  ) async {
     final metadata = await CaptureMetadataService.collectSnapshot(
       indexNumber: indexNumber,
     );
     final stampedPath = await ImageStampHelper.stampVehicleImage(
-      sourcePath: sourcePath,
+      sourcePath: path,
       metadata: metadata,
     );
     return VehicleImageCapture(path: stampedPath, metadata: metadata);

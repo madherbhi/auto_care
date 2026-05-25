@@ -44,34 +44,39 @@ class VehicleFormBodyState extends State<VehicleFormBody> {
   @override
   void initState() {
     super.initState();
-    final v = widget.initial;
-    _segmentType = v?.segmentType;
-    if (_segmentType != null &&
-        !StringHelper.segmentTypeOptions.contains(_segmentType)) {
-      _segmentType = null;
-    }
-    _caseType = v?.caseType;
-    if (_caseType != null &&
-        !StringHelper.caseTypeOptions.contains(_caseType)) {
-      _caseType = null;
-    }
-    _vehicleNo = TextEditingController(text: v?.vehicleNo ?? '');
-    _vehicleMake = TextEditingController(text: v?.vehicleMake ?? '');
-    _vehicleModel = TextEditingController(text: v?.vehicleModel ?? '');
-    _location = TextEditingController(text: v?.location ?? '');
-    _ownerName = TextEditingController(text: v?.ownerName ?? '');
-    _ownerContact = TextEditingController(text: v?.ownerContact ?? '');
-    final sessionName = UserSession.userName;
+    final record = widget.initial;
+
+    _segmentType = _validDropdownValue(
+      record?.segmentType,
+      StringHelper.segmentTypeOptions,
+    );
+    _caseType = _validDropdownValue(
+      record?.caseType,
+      StringHelper.caseTypeOptions,
+    );
+
+    _vehicleNo = TextEditingController(text: record?.vehicleNo ?? '');
+    _vehicleMake = TextEditingController(text: record?.vehicleMake ?? '');
+    _vehicleModel = TextEditingController(text: record?.vehicleModel ?? '');
+    _location = TextEditingController(text: record?.location ?? '');
+    _ownerName = TextEditingController(text: record?.ownerName ?? '');
+    _ownerContact = TextEditingController(text: record?.ownerContact ?? '');
     _userName = TextEditingController(
-      text: v?.userName ?? sessionName ?? '',
+      text: record?.userName ?? UserSession.userName ?? '',
     );
+
     _media = VehicleFormMediaState(
-      videoPath: v?.videoPath,
-      imagePaths: v?.imagePaths,
-      imageMetadata: v?.imageMetadata,
-      rcFrontPath: v?.rcFrontPath,
-      rcBackPath: v?.rcBackPath,
+      videoPath: record?.videoPath,
+      imagePaths: record?.imagePaths,
+      imageMetadata: record?.imageMetadata,
+      rcFrontPath: record?.rcFrontPath,
+      rcBackPath: record?.rcBackPath,
     );
+  }
+
+  String? _validDropdownValue(String? value, List<String> options) {
+    if (value == null || !options.contains(value)) return null;
+    return value;
   }
 
   @override
@@ -87,7 +92,10 @@ class VehicleFormBodyState extends State<VehicleFormBody> {
   }
 
   Future<void> _captureVideo() async {
-    final path = await MediaHelper.captureVideo();
+    final path = await MediaHelper.captureVehicleVideo(
+      context,
+      indexNumber: _media.nextIndexNumber(),
+    );
     if (path == null || !mounted) return;
     setState(() => _media.videoPath = path);
   }
@@ -128,12 +136,15 @@ class VehicleFormBodyState extends State<VehicleFormBody> {
       showVehicleFormSnack(context, StringHelper.uploadRcBackRequired);
       return;
     }
+    final segmentType = _segmentType;
+    final caseType = _caseType;
+    if (segmentType == null || caseType == null) return;
 
     widget.onSubmit(
       _media.toRecord(
         vehicleNo: _vehicleNo.text.trim().toUpperCase(),
-        segmentType: _segmentType!,
-        caseType: _caseType!,
+        segmentType: segmentType,
+        caseType: caseType,
         vehicleMake: _vehicleMake.text.trim(),
         vehicleModel: _vehicleModel.text.trim(),
         location: _location.text.trim(),

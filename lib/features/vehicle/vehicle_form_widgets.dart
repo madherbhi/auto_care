@@ -341,8 +341,7 @@ class VehicleFormSectionLabel extends StatelessWidget {
   }
 }
 
-/// Slots 1–5 use numbered placeholders; from the 6th cell onward a trailing
-/// “+ Add more” tile follows the last image and moves forward as images are added.
+/// Photo grid: 5 numbered slots first, then an “Add more” tile after the 5th photo.
 class VehicleImageSlotGrid extends StatelessWidget {
   const VehicleImageSlotGrid({
     super.key,
@@ -351,7 +350,7 @@ class VehicleImageSlotGrid extends StatelessWidget {
     required this.onRemove,
   });
 
-  static const int initialSlots = 5;
+  static const int maxInitialSlots = 5;
 
   final List<String> imagePaths;
   final VoidCallback onAdd;
@@ -366,25 +365,27 @@ class VehicleImageSlotGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final count = imagePaths.length;
-    // Always reserve the cell after the last image for “+ Add more”.
-    final itemCount = count >= initialSlots ? count + 1 : initialSlots + 1;
-    final addMoreIndex = count >= initialSlots ? count : initialSlots;
-    final addMoreEnabled = count >= initialSlots;
+    final photoCount = imagePaths.length;
+    final hasFivePhotos = photoCount >= maxInitialSlots;
+
+    // Before 5 photos: show empty slots + one active slot to tap.
+    // After 5 photos: show all photos + one trailing “Add more” tile.
+    final cellCount = hasFivePhotos ? photoCount + 1 : maxInitialSlots + 1;
+    final addMoreCellIndex = hasFivePhotos ? photoCount : maxInitialSlots;
 
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: _gridDelegate,
-      itemCount: itemCount,
+      itemCount: cellCount,
       itemBuilder: (context, index) {
-        if (index == addMoreIndex) {
+        if (index == addMoreCellIndex) {
           return _AddMoreImageTile(
-            enabled: addMoreEnabled,
-            onTap: addMoreEnabled ? onAdd : null,
+            enabled: hasFivePhotos,
+            onTap: hasFivePhotos ? onAdd : null,
           );
         }
-        if (index < count) {
+        if (index < photoCount) {
           return _VehicleImageTile(
             path: imagePaths[index],
             slotNumber: index + 1,
@@ -394,7 +395,7 @@ class VehicleImageSlotGrid extends StatelessWidget {
         }
         return _EmptyImageSlot(
           slotNumber: index + 1,
-          onTap: index == count ? onAdd : null,
+          onTap: index == photoCount ? onAdd : null,
         );
       },
     );

@@ -4,11 +4,10 @@ import 'dart:math' as math;
 import 'package:auto_care/models/vehicle_image_capture.dart';
 import 'package:auto_care/utils/capture_metadata_service.dart';
 import 'package:image/image.dart' as img;
-import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-/// Burns compass and metadata text overlays onto vehicle images.
+/// Draws compass + metadata text onto a vehicle photo file.
 class ImageStampHelper {
   ImageStampHelper._();
 
@@ -20,7 +19,7 @@ class ImageStampHelper {
     final decoded = img.decodeImage(bytes);
     if (decoded == null) return sourcePath;
 
-    final stamped = await _applyOverlays(decoded, metadata);
+    final stamped = drawStampedImage(decoded, metadata);
     final outputDir = await getApplicationDocumentsDirectory();
     final stampedDir = Directory(p.join(outputDir.path, 'stamped_vehicle_images'));
     if (!stampedDir.existsSync()) {
@@ -38,20 +37,35 @@ class ImageStampHelper {
     return outputPath;
   }
 
-  static Future<img.Image> _applyOverlays(
+  /// Returns a copy of [source] with compass and metadata overlays applied.
+  static img.Image drawStampedImage(
     img.Image source,
     VehicleImageMetadata metadata,
-  ) async {
+  ) {
     final image = img.copyResize(
       source,
       width: source.width,
       height: source.height,
     );
-    final scale = image.width / 1280.0;
+    drawOverlays(image, metadata);
+    return image;
+  }
 
+  /// Transparent PNG sized for burning onto video frames.
+  static img.Image buildOverlayPng({
+    required int width,
+    required int height,
+    required VehicleImageMetadata metadata,
+  }) {
+    final overlay = img.Image(width: width, height: height, numChannels: 4);
+    drawOverlays(overlay, metadata);
+    return overlay;
+  }
+
+  static void drawOverlays(img.Image image, VehicleImageMetadata metadata) {
+    final scale = image.width / 1280.0;
     _drawCompass(image, metadata.headingDegrees, scale);
     _drawMetadataText(image, metadata, scale);
-    return image;
   }
 
   static void _drawCompass(img.Image image, double? heading, double scale) {
@@ -121,22 +135,9 @@ class ImageStampHelper {
     final font = scale >= 1 ? img.arial24 : img.arial14;
     final lineHeight = (font.lineHeight + 4 * scale).round();
     final margin = (16 * scale).round();
-    final dateText = DateFormat('dd/MM/yyyy h:mm a').format(metadata.capturedAt);
-    final lines = <String>[
-      dateText,
-      CaptureMetadataService.headingLabel(metadata.headingDegrees),
-      CaptureMetadataService.formatCoordinates(
-        metadata.latitude,
-        metadata.longitude,
-      ),
-      CaptureMetadataService.formatLocationLine(metadata),
-      'Altitude:${_formatAltitude(metadata.altitudeMeters)}',
-      'Speed:${_formatSpeed(metadata.speedKmh)}',
-      'Index number: ${metadata.indexNumber}',
-    ];
+    final lines = CaptureMetadataService.overlayLines(metadata);
 
     var y = image.height - margin - lines.length * lineHeight;
-
     for (final line in lines) {
       final x = image.width - margin - _textWidth(line, font);
       _drawShadowText(
@@ -149,16 +150,6 @@ class ImageStampHelper {
       );
       y += lineHeight;
     }
-  }
-
-  static String _formatAltitude(double? meters) {
-    if (meters == null) return '--m';
-    return '${meters.toStringAsFixed(1)}m';
-  }
-
-  static String _formatSpeed(double? kmh) {
-    if (kmh == null) return '--km/h';
-    return '${kmh.toStringAsFixed(1)}km/h';
   }
 
   static int _textWidth(String text, img.BitmapFont font) {

@@ -6,9 +6,8 @@ import 'package:auto_care/utils/capture_metadata_service.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
-/// Top-left compass overlay shown during live camera capture.
+/// Compass shown on the top-left while taking a photo.
 class CaptureCompassOverlay extends StatelessWidget {
   const CaptureCompassOverlay({
     super.key,
@@ -106,7 +105,7 @@ class _CompassPainter extends CustomPainter {
   }
 }
 
-/// Bottom-right metadata overlay shown during live camera capture.
+/// GPS and time info shown on the bottom-right while taking a photo.
 class CaptureMetadataOverlay extends StatelessWidget {
   const CaptureMetadataOverlay({
     super.key,
@@ -115,63 +114,43 @@ class CaptureMetadataOverlay extends StatelessWidget {
 
   final VehicleImageMetadata metadata;
 
+  static const _textStyle = TextStyle(
+    fontFamily: FontHelper.poppinsMedium,
+    color: ColorHelper.white,
+    fontSize: 12,
+    height: 1.15,
+    shadows: [
+      Shadow(
+        color: Colors.black87,
+        blurRadius: 3,
+        offset: Offset(0.5, 0.5),
+      ),
+      Shadow(
+        color: Colors.black54,
+        blurRadius: 1,
+        offset: Offset(-0.5, -0.5),
+      ),
+    ],
+  );
+
   @override
   Widget build(BuildContext context) {
-    final lines = [
-      DateFormat('dd/MM/yyyy h:mm a').format(metadata.capturedAt),
-      CaptureMetadataService.headingLabel(metadata.headingDegrees),
-      CaptureMetadataService.formatCoordinates(
-        metadata.latitude,
-        metadata.longitude,
-      ),
-      CaptureMetadataService.formatLocationLine(metadata),
-      'Altitude:${_formatAltitude(metadata.altitudeMeters)}',
-      'Speed:${_formatSpeed(metadata.speedKmh)}',
-      'Index number: ${metadata.indexNumber}',
-    ];
+    final lines = CaptureMetadataService.overlayLines(metadata);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       mainAxisSize: MainAxisSize.min,
-      children: lines
-          .map(
-            (line) => Padding(
-              padding: const EdgeInsets.only(bottom: 2),
-              child: Text(
-                line,
-                textAlign: TextAlign.right,
-                style: const TextStyle(
-                  fontFamily: FontHelper.poppinsMedium,
-                  color: ColorHelper.white,
-                  fontSize: 12,
-                  height: 1.15,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black87,
-                      blurRadius: 3,
-                      offset: Offset(0.5, 0.5),
-                    ),
-                    Shadow(
-                      color: Colors.black54,
-                      blurRadius: 1,
-                      offset: Offset(-0.5, -0.5),
-                    ),
-                  ],
-                ),
-              ),
+      children: [
+        for (final line in lines)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 2),
+            child: Text(
+              line,
+              textAlign: TextAlign.right,
+              style: _textStyle,
             ),
-          )
-          .toList(),
+          ),
+      ],
     );
-  }
-
-  static String _formatAltitude(double? meters) {
-    if (meters == null) return '--m';
-    return '${meters.toStringAsFixed(1)}m';
-  }
-
-  static String _formatSpeed(double? kmh) {
-    if (kmh == null) return '--km/h';
-    return '${kmh.toStringAsFixed(1)}km/h';
   }
 }

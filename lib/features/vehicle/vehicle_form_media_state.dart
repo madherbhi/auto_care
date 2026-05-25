@@ -2,7 +2,7 @@ import 'package:auto_care/models/vehicle_image_capture.dart';
 import 'package:auto_care/models/vehicle_record_list_model.dart';
 import 'package:auto_care/utils/capture_metadata_service.dart';
 
-/// Shared media state for add / detail vehicle forms.
+/// Holds video, photos, and RC uploads for the vehicle form.
 class VehicleFormMediaState {
   VehicleFormMediaState({
     this.videoPath,
@@ -10,48 +10,55 @@ class VehicleFormMediaState {
     List<VehicleImageMetadata>? imageMetadata,
     this.rcFrontPath,
     this.rcBackPath,
-  }) : images = _buildInitialImages(imagePaths, imageMetadata);
+  })  : imagePaths = List<String>.from(imagePaths ?? const []),
+        imageMetadata = List<VehicleImageMetadata>.from(
+          imageMetadata ?? const [],
+        ) {
+    _fillMissingMetadata();
+  }
 
   String? videoPath;
-  final List<VehicleImageCapture> images;
+  final List<String> imagePaths;
+  final List<VehicleImageMetadata> imageMetadata;
   String? rcFrontPath;
   String? rcBackPath;
 
-  List<String> get imagePaths =>
-      images.map((capture) => capture.path).toList(growable: false);
-
-  List<VehicleImageMetadata> get imageMetadata =>
-      images.map((capture) => capture.metadata).toList(growable: false);
-
-  static List<VehicleImageCapture> _buildInitialImages(
-    List<String>? imagePaths,
-    List<VehicleImageMetadata>? imageMetadata,
-  ) {
-    if (imagePaths == null || imagePaths.isEmpty) return [];
-
-    return List.generate(imagePaths.length, (index) {
-      final metadata = imageMetadata != null && index < imageMetadata.length
-          ? imageMetadata[index]
-          : VehicleImageMetadata(
-              capturedAt: DateTime.now(),
-              indexNumber: CaptureMetadataService.nextIndexNumber(),
-            );
-      return VehicleImageCapture(path: imagePaths[index], metadata: metadata);
-    });
+  void _fillMissingMetadata() {
+    while (imageMetadata.length < imagePaths.length) {
+      imageMetadata.add(
+        VehicleImageMetadata(
+          capturedAt: DateTime.now(),
+          indexNumber: CaptureMetadataService.nextIndexNumber(),
+        ),
+      );
+    }
   }
 
   void addImage(VehicleImageCapture capture) {
-    images.add(capture);
+    imagePaths.add(capture.path);
+    imageMetadata.add(capture.metadata);
   }
 
   void removeImageAt(int index) {
-    if (index < 0 || index >= images.length) return;
-    images.removeAt(index);
+    if (index < 0 || index >= imagePaths.length) return;
+    imagePaths.removeAt(index);
+    if (index < imageMetadata.length) {
+      imageMetadata.removeAt(index);
+    }
   }
 
   int nextIndexNumber() {
-    if (images.isEmpty) return CaptureMetadataService.nextIndexNumber();
-    return images.map((e) => e.metadata.indexNumber).reduce((a, b) => a > b ? a : b) + 1;
+    if (imageMetadata.isEmpty) {
+      return CaptureMetadataService.nextIndexNumber();
+    }
+
+    var highest = imageMetadata.first.indexNumber;
+    for (final data in imageMetadata) {
+      if (data.indexNumber > highest) {
+        highest = data.indexNumber;
+      }
+    }
+    return highest + 1;
   }
 
   VehicleRecord toRecord({
