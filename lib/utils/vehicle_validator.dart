@@ -9,6 +9,10 @@ class VehicleValidator {
 
   static final RegExp _phonePattern = RegExp(r'^[6-9]\d{9}$');
 
+  static final RegExp _emailPattern = RegExp(
+    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+  );
+
   static String? required(String? value, {String message = 'Required'}) {
     if (value == null || value.trim().isEmpty) return message;
     return null;
@@ -30,6 +34,26 @@ class VehicleValidator {
     final digits = value!.replaceAll(RegExp(r'\D'), '');
     if (!_phonePattern.hasMatch(digits)) {
       return StringHelper.contactNumberInvalid;
+    }
+    return null;
+  }
+
+  static String? mobileNumber(String? value) {
+    final empty = required(value, message: StringHelper.mobileNumberRequired);
+    if (empty != null) return empty;
+    final digits = value!.replaceAll(RegExp(r'\D'), '');
+    if (!_phonePattern.hasMatch(digits)) {
+      return StringHelper.mobileNumberInvalid;
+    }
+    return null;
+  }
+
+  static String? email(String? value) {
+    final empty = required(value, message: StringHelper.emailRequired);
+    if (empty != null) return empty;
+    final trimmed = value!.trim();
+    if (!_emailPattern.hasMatch(trimmed)) {
+      return StringHelper.emailInvalid;
     }
     return null;
   }

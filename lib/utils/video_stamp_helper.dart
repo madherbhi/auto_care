@@ -38,25 +38,8 @@ class VideoStampHelper {
     workDir.createSync(recursive: true);
 
     final overlayPath = p.join(workDir.path, 'overlay.png');
-    final outputPath = p.join(
-      stampedDir.path,
-      'vehicle_${metadata.indexNumber}_${metadata.capturedAt.millisecondsSinceEpoch}.mp4',
-    );
 
     await File(overlayPath).writeAsBytes(overlayBytes, flush: true);
-
-    final command = [
-      '-y',
-      '-i',
-      _escapePath(sourcePath),
-      '-i',
-      _escapePath(overlayPath),
-      '-filter_complex',
-      '[0:v][1:v]overlay=0:0',
-      '-c:a',
-      'copy',
-      _escapePath(outputPath),
-    ].join(' ');
 
     try {
       workDir.deleteSync(recursive: true);
@@ -84,10 +67,5 @@ class VideoStampHelper {
     } finally {
       await controller.dispose();
     }
-  }
-
-  static String _escapePath(String path) {
-    if (path.contains(' ')) return '"$path"';
-    return path;
   }
 }

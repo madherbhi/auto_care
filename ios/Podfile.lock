@@ -1,11 +1,6 @@
 PODS:
   - camera_avfoundation (0.0.1):
     - Flutter
-  - ffmpeg_kit_flutter (6.0.3):
-    - ffmpeg_kit_flutter/ffmpeg_kit_ios_local (= 6.0.3)
-    - Flutter
-  - ffmpeg_kit_flutter/ffmpeg_kit_ios_local (6.0.3):
-    - Flutter
   - Flutter (1.0.0)
   - flutter_compass (0.0.1):
     - Flutter
@@ -34,7 +29,6 @@ PODS:
 
 DEPENDENCIES:
   - camera_avfoundation (from `.symlinks/plugins/camera_avfoundation/ios`)
-  - ffmpeg_kit_flutter (from `.symlinks/plugins/ffmpeg_kit_flutter/ios`)
   - Flutter (from `Flutter`)
   - flutter_compass (from `.symlinks/plugins/flutter_compass/ios`)
   - geocoding_ios (from `.symlinks/plugins/geocoding_ios/ios`)
@@ -50,8 +44,6 @@ DEPENDENCIES:
 EXTERNAL SOURCES:
   camera_avfoundation:
     :path: ".symlinks/plugins/camera_avfoundation/ios"
-  ffmpeg_kit_flutter:
-    :path: ".symlinks/plugins/ffmpeg_kit_flutter/ios"
   Flutter:
     :path: Flutter
   flutter_compass:
@@ -77,7 +69,6 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   camera_avfoundation: 5675ca25298b6f81fa0a325188e7df62cc217741
-  ffmpeg_kit_flutter: e7449f74ff7dd97fab1b479c862f7f72ff1127ca
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   flutter_compass: b236ab69b61545cce89fd58527f401a7587d5cc1
   geocoding_ios: 33776c9ebb98d037b5e025bb0e7537f6dd19646e

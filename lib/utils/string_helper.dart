@@ -25,6 +25,11 @@ class StringHelper {
   static const String enterPassword = "Enter password";
   static const String enterMobile = "Enter mobile number";
   static const String enterEmail = "Enter email";
+  static const String mobileNumberRequired = "Mobile number is required";
+  static const String mobileNumberInvalid =
+      "Enter a valid 10-digit mobile number";
+  static const String emailRequired = "Email is required";
+  static const String emailInvalid = "Enter a valid email address";
   static const String registerSignUp = "REGISTER / SIGN UP";
   static const String exit = "Exit";
   static const String welcomeBack = "Welcome Back";

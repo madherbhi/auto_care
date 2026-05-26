@@ -1,7 +1,9 @@
 import 'package:auto_care/constants/app_layout.dart';
+import 'package:auto_care/features/Home/home_page.dart';
 import 'package:auto_care/starting_page.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/image_helper.dart';
+import 'package:auto_care/utils/user_session.dart';
 import 'package:auto_care/utils/navigation_helper.dart';
 import 'package:flutter/material.dart';
 
@@ -25,10 +27,16 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
     Future<void>.delayed(AppLayout.splashDisplayDuration, () {
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        appRoute<void>(const StartingPage()),
-      );
+      _navigateAfterInit();
     });
+  }
+
+  Future<void> _navigateAfterInit() async {
+    await UserSession.init();
+    if (!mounted) return;
+    final target =
+        UserSession.isLoggedIn ? const HomeRequestListPage() : const StartingPage();
+    Navigator.of(context).pushReplacement(appRoute<void>(target));
   }
 
   @override

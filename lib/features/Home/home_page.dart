@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:auto_care/constants/app_layout.dart';
 import 'package:auto_care/features/vehicle/add_vehicle_page.dart';
 import 'package:auto_care/features/vehicle/vehicle_detail_page.dart';
@@ -7,6 +9,7 @@ import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
 import 'package:auto_care/utils/navigation_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
+import 'package:auto_care/utils/user_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
@@ -220,6 +223,7 @@ class _HomeRequestListPageState extends State<HomeRequestListPage> {
               bottomExtra: bottomInset * 0.2,
               onAddNew: _openAddVehicle,
               onLogout: () {
+                unawaited(UserSession.clearPersisted());
                 Navigator.of(context).pushAndRemoveUntil(
                   appRoute<void>(const StartingPage()),
                   (_) => false,

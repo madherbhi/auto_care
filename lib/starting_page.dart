@@ -1,6 +1,6 @@
 import 'package:auto_care/constants/app_layout.dart';
-import 'package:auto_care/features/Authentication/login_page.dart';
-import 'package:auto_care/features/Authentication/register_page.dart';
+import 'package:auto_care/features/Authentication/view/login_page.dart';
+import 'package:auto_care/features/Authentication/view/register_page.dart';
 import 'package:auto_care/widgets/custom_action_button.dart';
 import 'package:flutter/material.dart';
 
