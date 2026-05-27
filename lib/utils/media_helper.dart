@@ -6,7 +6,6 @@ import 'package:auto_care/models/vehicle_image_capture.dart';
 import 'package:auto_care/utils/capture_metadata_service.dart';
 import 'package:auto_care/utils/image_stamp_helper.dart';
 import 'package:auto_care/utils/video_stamp_helper.dart';
-import 'package:auto_care/utils/navigation_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -105,8 +104,8 @@ class MediaHelper {
     final useCustomCamera = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
     if (useCustomCamera) {
       return Navigator.of(context).push<String>(
-        appRoute(VehicleVideoCapturePage(indexNumber: indexNumber)),
-      );
+        MaterialPageRoute(builder: (context) =>(VehicleVideoCapturePage(indexNumber: indexNumber)),
+      ));
     }
 
     final path = await captureVideo();
@@ -160,8 +159,8 @@ class MediaHelper {
     final useCustomCamera = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
     if (useCustomCamera) {
       return Navigator.of(context).push<VehicleImageCapture>(
-        appRoute(VehicleCameraCapturePage(indexNumber: indexNumber)),
-      );
+        MaterialPageRoute(builder: (context) =>(VehicleCameraCapturePage(indexNumber: indexNumber)),
+       ) );
     }
 
     final path = await captureImage();

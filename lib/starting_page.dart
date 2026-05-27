@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
 import 'package:auto_care/utils/image_helper.dart';
-import 'package:auto_care/utils/navigation_helper.dart';
 import 'package:auto_care/utils/starting_layout_scale.dart';
 import 'package:auto_care/utils/string_helper.dart';
 import 'package:gap/gap.dart';
@@ -60,7 +59,7 @@ class StartingPage extends StatelessWidget {
                             border: null,
                             onTap: () {
                               Navigator.of(innerCtx).push(
-                                appRoute<void>(const LoginPage()),
+                                MaterialPageRoute(builder: (context) =>LoginPage()),
                               );
                             },
                           ),
@@ -74,7 +73,7 @@ class StartingPage extends StatelessWidget {
                             border: const BorderSide(color: ColorHelper.buttonOutline),
                             onTap: () {
                               Navigator.of(innerCtx).push(
-                                appRoute<void>(const RegisterPage()),
+                           MaterialPageRoute(builder: (context) => RegisterPage()),
                               );
                             },
                           ),

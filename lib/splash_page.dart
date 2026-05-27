@@ -4,7 +4,6 @@ import 'package:auto_care/starting_page.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/image_helper.dart';
 import 'package:auto_care/utils/user_session.dart';
-import 'package:auto_care/utils/navigation_helper.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -36,7 +35,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
     final target =
         UserSession.isLoggedIn ? const HomeRequestListPage() : const StartingPage();
-    Navigator.of(context).pushReplacement(appRoute<void>(target));
+    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => target));
   }
 
   @override

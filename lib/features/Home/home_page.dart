@@ -1,180 +1,69 @@
 import 'dart:async';
 
 import 'package:auto_care/constants/app_layout.dart';
+import 'package:auto_care/features/Home/controllers/home_controller.dart';
 import 'package:auto_care/features/vehicle/add_vehicle_page.dart';
 import 'package:auto_care/features/vehicle/vehicle_detail_page.dart';
 import 'package:auto_care/models/vehicle_record_list_model.dart';
 import 'package:auto_care/starting_page.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
-import 'package:auto_care/utils/navigation_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
 import 'package:auto_care/utils/user_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
-
-enum HomeStatusTone {
-  neutral,
-  processing,
-  submitted,
-  pending,
-  approved,
-  rejected,
-}
-
-class HomeListRow {
-  const HomeListRow({
-    required this.vehicleIcon,
-    required this.registrationNumber,
-    required this.ownerName,
-    required this.status,
-    required this.date,
-    required this.statusTone,
-    this.selectedCard = false,
-  });
-
-  final IconData vehicleIcon;
-  final String registrationNumber;
-  final String ownerName;
-  final String status;
-  final String date;
-  final HomeStatusTone statusTone;
-  final bool selectedCard;
-}
+import 'package:get/get.dart';
 
 class HomeRequestListPage extends StatefulWidget {
   const HomeRequestListPage({super.key});
 
   @override
-  State<HomeRequestListPage> createState() =>
-      _HomeRequestListPageState();
+  State<HomeRequestListPage> createState() => _HomeRequestListPageState();
 }
 
 class _HomeRequestListPageState extends State<HomeRequestListPage> {
   final _searchController = TextEditingController();
   final _searchFocus = FocusNode();
+  late final HomeController _homeController;
 
-  late List<HomeListRow> _allRows = [
-    const HomeListRow(
-      vehicleIcon: Icons.directions_car_rounded,
-      registrationNumber: "AP39FG8236",
-      ownerName: "Mr. Kumar",
-      status: "Submitted",
-      date: "05/05/26",
-      statusTone: HomeStatusTone.submitted,
-      selectedCard: true,
-    ),
-    const HomeListRow(
-      vehicleIcon: Icons.directions_car_rounded,
-      registrationNumber: "AP39FG8237",
-      ownerName: "Mr. Raju",
-      status: "under process",
-      date: "06/05/26",
-      statusTone: HomeStatusTone.processing,
-    ),
-    const HomeListRow(
-      vehicleIcon: Icons.local_shipping_rounded,
-      registrationNumber: "TS10AB1234",
-      ownerName: "Ms. Priya",
-      status: "Pending",
-      date: "04/05/26",
-      statusTone: HomeStatusTone.pending,
-    ),
-    const HomeListRow(
-      vehicleIcon: Icons.two_wheeler_rounded,
-      registrationNumber: "KA05CD9999",
-      ownerName: "Mr. Ahmed",
-      status: "Approved",
-      date: "01/05/26",
-      statusTone: HomeStatusTone.approved,
-    ),
-    const HomeListRow(
-      vehicleIcon: Icons.directions_car_rounded,
-      registrationNumber: "MH12XY0001",
-      ownerName: "Ms. Lee",
-      status: "Rejected",
-      date: "30/04/26",
-      statusTone: HomeStatusTone.rejected,
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _homeController = Get.put(HomeController());
+    _searchController.addListener(_onSearchChanged);
+  }
 
-  VehicleRecord _vehicleForRow(HomeListRow row) {
-    return kSampleVehiclesByRegNo[row.registrationNumber] ??
-        VehicleRecord(
-          vehicleNo: row.registrationNumber,
-          segmentType: 'Car',
-          caseType: 'Valuation',
-          vehicleMake: '',
-          vehicleModel: '',
-          location: '',
-          ownerName: row.ownerName,
-          ownerContact: '',
-          userName: row.ownerName,
-        );
+  void _onSearchChanged() {
+    _homeController.searchQuery.value = _searchController.text;
   }
 
   Future<void> _openAddVehicle() async {
     final result = await Navigator.of(context).push<VehicleRecord>(
-      appRoute(const AddVehiclePage()),
+   MaterialPageRoute(builder: (context) =>const AddVehiclePage()),
     );
     if (result == null || !mounted) return;
-    kSampleVehiclesByRegNo[result.vehicleNo] = result;
-    setState(() {
-      _allRows = [
-        HomeListRow(
-          vehicleIcon: Icons.directions_car_rounded,
-          registrationNumber: result.vehicleNo,
-          ownerName: result.ownerName,
-          status: 'Pending',
-          date: '13/05/26',
-          statusTone: HomeStatusTone.pending,
-        ),
-        ..._allRows,
-      ];
-    });
+    _homeController.prependFromVehicleRecord(result);
   }
 
   Future<void> _openVehicleDetail(HomeListRow row) async {
-    final initial = _vehicleForRow(row);
+    final initial = _homeController.vehicleForRow(row);
     final result = await Navigator.of(context).push<VehicleRecord>(
-      appRoute(VehicleDetailPage(vehicle: initial)),
+     MaterialPageRoute(builder: (context) =>VehicleDetailPage(vehicle: initial)),
     );
     if (result == null || !mounted) return;
-    kSampleVehiclesByRegNo[result.vehicleNo] = result;
-    setState(() {
-      _allRows = _allRows.map((r) {
-        if (r.registrationNumber != row.registrationNumber) return r;
-        return HomeListRow(
-          vehicleIcon: r.vehicleIcon,
-          registrationNumber: result.vehicleNo,
-          ownerName: result.ownerName,
-          status: r.status,
-          date: r.date,
-          statusTone: r.statusTone,
-          selectedCard: r.selectedCard,
-        );
-      }).toList();
-    });
+    _homeController.updateCaseFromVehicleRecord(
+      row.registrationNumber,
+      result,
+    );
   }
 
   @override
   void dispose() {
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     _searchFocus.dispose();
     super.dispose();
-  }
-
-  List<HomeListRow> get _filteredRows {
-    final q = _searchController.text.trim().toLowerCase();
-    if (q.isEmpty) return _allRows;
-    return _allRows
-        .where(
-          (r) =>
-              r.registrationNumber.toLowerCase().contains(q) ||
-              r.ownerName.toLowerCase().contains(q),
-        )
-        .toList();
   }
 
   @override
@@ -182,7 +71,6 @@ class _HomeRequestListPageState extends State<HomeRequestListPage> {
     final size = MediaQuery.sizeOf(context);
     final padH = AuthResponsive.horizontalPadding(size.width);
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final rows = _filteredRows;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -200,23 +88,54 @@ class _HomeRequestListPageState extends State<HomeRequestListPage> {
               padH: 10,
               controller: _searchController,
               focusNode: _searchFocus,
-              onChanged: (_) => setState(() {}),
             ),
             Expanded(
-              child: ListView.builder(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
-                itemCount: rows.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: _HomeRequestCard(
-                      row: rows[index],
-                      onTap: () => _openVehicleDetail(rows[index]),
+              child: Obx(() {
+                if (_homeController.isLoading.value &&
+                    _homeController.cases.isEmpty) {
+                  return const Center(
+                    child: CircularProgressIndicator(
+                      color: ColorHelper.primaryBlue,
                     ),
                   );
-                },
-              ),
+                }
+
+                final error = _homeController.errorMessage.value;
+                if (error != null &&
+                    error.isNotEmpty &&
+                    _homeController.cases.isEmpty) {
+                  return _HomeErrorState(
+                    message: error,
+                    onRetry: _homeController.loadCases,
+                  );
+                }
+
+                final rows = _homeController.filteredRows;
+                if (rows.isEmpty) {
+                  return const _HomeEmptyState();
+                }
+
+                return RefreshIndicator(
+                  color: ColorHelper.primaryBlue,
+                  onRefresh: _homeController.loadCases,
+                  child: ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics(),
+                    ),
+                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+                    itemCount: rows.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _HomeRequestCard(
+                          row: rows[index],
+                          onTap: () => _openVehicleDetail(rows[index]),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              }),
             ),
             _BottomActionsRow(
               padH: padH,
@@ -225,7 +144,7 @@ class _HomeRequestListPageState extends State<HomeRequestListPage> {
               onLogout: () {
                 unawaited(UserSession.clearPersisted());
                 Navigator.of(context).pushAndRemoveUntil(
-                  appRoute<void>(const StartingPage()),
+                MaterialPageRoute(builder: (context) =>const StartingPage()),
                   (_) => false,
                 );
               },
@@ -237,8 +156,70 @@ class _HomeRequestListPageState extends State<HomeRequestListPage> {
   }
 }
 
-class _HomeListAppBar extends StatelessWidget
-    implements PreferredSizeWidget {
+class _HomeEmptyState extends StatelessWidget {
+  const _HomeEmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Text(
+          'No inspection requests found.',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: FontHelper.poppinsRegular,
+            fontSize: 14,
+            color: ColorHelper.mediumGray.withValues(alpha: 0.95),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeErrorState extends StatelessWidget {
+  const _HomeErrorState({required this.message, required this.onRetry});
+
+  final String message;
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontFamily: FontHelper.poppinsRegular,
+                fontSize: 14,
+                color: ColorHelper.darkGray,
+              ),
+            ),
+            const Gap(16),
+            FilledButton(
+              onPressed: onRetry,
+              style: FilledButton.styleFrom(
+                backgroundColor: ColorHelper.primaryBlue,
+              ),
+              child: const Text(
+                'Retry',
+                style: TextStyle(fontFamily: FontHelper.poppinsSemiBold),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeListAppBar extends StatelessWidget implements PreferredSizeWidget {
   const _HomeListAppBar();
 
   @override
@@ -275,13 +256,11 @@ class _HomeSearchRow extends StatelessWidget {
     required this.padH,
     required this.controller,
     required this.focusNode,
-    required this.onChanged,
   });
 
   final double padH;
   final TextEditingController controller;
   final FocusNode focusNode;
-  final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -296,7 +275,6 @@ class _HomeSearchRow extends StatelessWidget {
               child: TextField(
                 controller: controller,
                 focusNode: focusNode,
-                onChanged: onChanged,
                 textInputAction: TextInputAction.search,
                 style: const TextStyle(
                   fontFamily: FontHelper.poppinsRegular,

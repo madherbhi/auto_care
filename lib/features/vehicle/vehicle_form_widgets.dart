@@ -4,7 +4,6 @@ import 'package:auto_care/constants/app_layout.dart';
 import 'package:auto_care/starting_page.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
-import 'package:auto_care/utils/navigation_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
 import 'package:auto_care/utils/user_session.dart';
 import 'package:auto_care/widgets/auth_shell.dart';
@@ -60,7 +59,7 @@ class VehicleFormAppBar extends StatelessWidget implements PreferredSizeWidget {
           onPressed: () {
             UserSession.clear();
             Navigator.of(context).pushAndRemoveUntil(
-              appRoute<void>(const StartingPage()),
+              MaterialPageRoute(builder: (context) =>const StartingPage()),
               (_) => false,
             );
           },

@@ -5,7 +5,6 @@ import 'package:auto_care/features/Authentication/view/register_page.dart';
 import 'package:auto_care/features/Home/home_page.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
-import 'package:auto_care/utils/navigation_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
 import 'package:auto_care/utils/vehicle_validator.dart';
 import 'package:auto_care/widgets/auth_shell.dart';
@@ -168,7 +167,7 @@ class _LoginPageState extends State<LoginPage> {
                                 child: GestureDetector(
                                   onTap: () {
                                     Navigator.of(context).push(
-                                      appRoute<void>(
+                                     MaterialPageRoute(builder: (context) =>
                                         const ForgotPasswordPage(),
                                       ),
                                     );
@@ -227,7 +226,7 @@ class _LoginPageState extends State<LoginPage> {
                                               colorText: Colors.white,
                                             );
                                             navigator.pushAndRemoveUntil(
-                                              appRoute<void>(
+                                             MaterialPageRoute(builder: (context) =>
                                                 const HomeRequestListPage(),
                                               ),
                                               (_) => false,
@@ -272,7 +271,7 @@ class _LoginPageState extends State<LoginPage> {
                                     GestureDetector(
                                       onTap: () {
                                         Navigator.of(context).push(
-                                          appRoute<void>(const RegisterPage()),
+                                   MaterialPageRoute(builder: (context) =>const RegisterPage()),
                                         );
                                       },
                                       child: Text(

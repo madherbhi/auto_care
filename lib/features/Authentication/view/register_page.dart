@@ -4,7 +4,6 @@ import 'package:auto_care/features/Authentication/models/auth_models.dart';
 import 'package:auto_care/features/Home/home_page.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
-import 'package:auto_care/utils/navigation_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
 import 'package:auto_care/utils/vehicle_validator.dart';
 import 'package:auto_care/widgets/auth_shell.dart';
@@ -364,7 +363,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                               colorText: Colors.white,
                                             );
                                             navigator.pushAndRemoveUntil(
-                                              appRoute<void>(
+                                             MaterialPageRoute(builder: (context) =>
                                                 const HomeRequestListPage(),
                                               ),
                                               (_) => false,
