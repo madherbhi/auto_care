@@ -1,4 +1,4 @@
-import 'package:auto_care/models/vehicle_image_capture.dart';
+import 'package:auto_care/features/vehicle/models/vehicle_image_capture.dart';
 
 class VehicleRecord {
   const VehicleRecord({
@@ -14,8 +14,7 @@ class VehicleRecord {
     this.videoPath,
     this.imagePaths = const [],
     this.imageMetadata = const [],
-    this.rcFrontPath,
-    this.rcBackPath,
+      this.rcImages = const [],
   });
 
   final String vehicleNo;
@@ -30,8 +29,7 @@ class VehicleRecord {
   final String? videoPath;
   final List<String> imagePaths;
   final List<VehicleImageMetadata> imageMetadata;
-  final String? rcFrontPath;
-  final String? rcBackPath;
+  final List<String> rcImages;
 
   VehicleRecord copyWith({
     String? vehicleNo,
@@ -46,8 +44,7 @@ class VehicleRecord {
     String? videoPath,
     List<String>? imagePaths,
     List<VehicleImageMetadata>? imageMetadata,
-    String? rcFrontPath,
-    String? rcBackPath,
+    List<String>? rcImages,
   }) {
     return VehicleRecord(
       vehicleNo: vehicleNo ?? this.vehicleNo,
@@ -62,8 +59,7 @@ class VehicleRecord {
       videoPath: videoPath ?? this.videoPath,
       imagePaths: imagePaths ?? this.imagePaths,
       imageMetadata: imageMetadata ?? this.imageMetadata,
-      rcFrontPath: rcFrontPath ?? this.rcFrontPath,
-      rcBackPath: rcBackPath ?? this.rcBackPath,
+      rcImages: rcImages ?? this.rcImages,
     );
   }
 }

@@ -106,11 +106,11 @@ class VehicleFormSaveBar extends StatelessWidget {
   const VehicleFormSaveBar({
     super.key,
     required this.label,
-    required this.onPressed,
+    this.onPressed,
   });
 
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {

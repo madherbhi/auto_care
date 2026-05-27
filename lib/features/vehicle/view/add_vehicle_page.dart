@@ -1,9 +1,13 @@
 import 'package:auto_care/constants/app_layout.dart';
-import 'package:auto_care/features/vehicle/vehicle_form_body.dart';
-import 'package:auto_care/features/vehicle/vehicle_form_widgets.dart';
+import 'package:auto_care/features/Home/models/case_model.dart';
+import 'package:auto_care/features/vehicle/controllers/add_vehicle_controller.dart';
+import 'package:auto_care/features/vehicle/models/vehicle_record_list_model.dart';
+import 'package:auto_care/features/vehicle/widgets/vehicle_form_widgets.dart';
+import 'package:auto_care/features/vehicle/widgets/vehicle_form_body.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class AddVehiclePage extends StatefulWidget {
   const AddVehiclePage({super.key});
@@ -15,8 +19,30 @@ class AddVehiclePage extends StatefulWidget {
 class _AddVehiclePageState extends State<AddVehiclePage> {
   final _formKey = GlobalKey<FormState>();
   final _formBodyKey = GlobalKey<VehicleFormBodyState>();
+  late final AddVehicleController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(AddVehicleController());
+  }
 
   void _onSave() => _formBodyKey.currentState?.submit();
+
+  Future<void> _onSubmit(VehicleRecord record) async {
+    final created = await _controller.createCase(record);
+    if (!mounted) return;
+
+    final error = _controller.errorMessage.value;
+    if (created == null) {
+      if (error != null && error.isNotEmpty) {
+        showVehicleFormSnack(context, error);
+      }
+      return;
+    }
+
+    Navigator.of(context).pop<CaseModel>(created);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,16 +77,17 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
                       key: _formBodyKey,
                       formKey: _formKey,
                       initial: null,
-                      onSubmit: (record) =>
-                          Navigator.of(context).pop(record),
+                      onSubmit: _onSubmit,
                     ),
                   ),
                 ),
               ),
             ),
-            VehicleFormSaveBar(
-              label: StringHelper.save,
-              onPressed: _onSave,
+            Obx(
+              () => VehicleFormSaveBar(
+                label: StringHelper.save,
+                onPressed: _controller.isSubmitting.value ? null : _onSave,
+              ),
             ),
           ],
         ),

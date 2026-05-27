@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:auto_care/features/vehicle/vehicle_camera_capture_page.dart';
-import 'package:auto_care/features/vehicle/vehicle_video_capture_page.dart';
-import 'package:auto_care/models/vehicle_image_capture.dart';
+import 'package:auto_care/features/vehicle/view/vehicle_camera_capture_page.dart';
+import 'package:auto_care/features/vehicle/view/vehicle_video_capture_page.dart';
+import 'package:auto_care/features/vehicle/models/vehicle_image_capture.dart';
 import 'package:auto_care/utils/capture_metadata_service.dart';
 import 'package:auto_care/utils/image_stamp_helper.dart';
 import 'package:auto_care/utils/video_stamp_helper.dart';

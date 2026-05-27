@@ -51,14 +51,46 @@ class LoginResponse {
   final String? username;
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
-    final resolvedUsername =
-        (json['username'] ?? json['userName'] ?? json['name'] ?? '')
-            .toString()
-            .trim();
+    final token = _readToken(json);
+    final resolvedUsername = _readUsername(json);
     return LoginResponse(
-      token: (json['token'] ?? '').toString(),
-      username: resolvedUsername.isEmpty ? null : resolvedUsername,
+      token: token,
+      username: resolvedUsername,
     );
+  }
+
+  static String _readToken(Map<String, dynamic> json) {
+    for (final source in _jsonSources(json)) {
+      final token = (source['token'] ?? source['accessToken'] ?? '')
+          .toString()
+          .trim();
+      if (token.isNotEmpty) return token;
+    }
+    return '';
+  }
+
+  static String? _readUsername(Map<String, dynamic> json) {
+    for (final source in _jsonSources(json)) {
+      for (final key in const ['username', 'userName', 'name', 'displayName']) {
+        final resolved = (source[key] ?? '').toString().trim();
+        if (resolved.isNotEmpty && !resolved.contains('@')) return resolved;
+      }
+    }
+    return null;
+  }
+
+  static Iterable<Map<String, dynamic>> _jsonSources(
+    Map<String, dynamic> json,
+  ) sync* {
+    yield json;
+    final data = json['data'];
+    if (data is Map) {
+      yield Map<String, dynamic>.from(data);
+    }
+    final user = json['user'];
+    if (user is Map) {
+      yield Map<String, dynamic>.from(user);
+    }
   }
 }
 

@@ -146,6 +146,10 @@ class StringHelper {
   static const String addAtLeastOneImage = "Add at least one vehicle image";
   static const String uploadRcFrontRequired = "Upload RC front side image";
   static const String uploadRcBackRequired = "Upload RC back side image";
+  static const String userNameRequired =
+      "User name is missing. Please log out and sign in again.";
+  static const String uploadConnectionLost =
+      "Connection lost while uploading. Check your network and try again.";
   static const String save = "Save";
   static const String cancel = "Cancel";
   static const String update = "Update";

@@ -1,13 +1,12 @@
 import 'dart:ui' as ui;
 import 'dart:math' as math;
 
-import 'package:auto_care/models/vehicle_image_capture.dart';
+import 'package:auto_care/features/vehicle/models/vehicle_image_capture.dart';
 import 'package:auto_care/utils/capture_metadata_service.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
 import 'package:flutter/material.dart';
 
-/// Compass shown on the top-left while taking a photo.
 class CaptureCompassOverlay extends StatelessWidget {
   const CaptureCompassOverlay({
     super.key,

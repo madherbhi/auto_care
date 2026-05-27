@@ -1,4 +1,4 @@
-import 'package:auto_care/models/vehicle_record_list_model.dart';
+import 'package:auto_care/features/vehicle/models/vehicle_record_list_model.dart';
 
 class CaseModel {
   const CaseModel({

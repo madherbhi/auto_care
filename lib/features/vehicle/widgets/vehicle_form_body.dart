@@ -1,7 +1,7 @@
 import 'package:auto_care/constants/app_layout.dart';
-import 'package:auto_care/models/vehicle_record_list_model.dart';
-import 'package:auto_care/features/vehicle/vehicle_form_media_state.dart';
-import 'package:auto_care/features/vehicle/vehicle_form_widgets.dart';
+import 'package:auto_care/features/vehicle/models/vehicle_record_list_model.dart';
+import 'package:auto_care/features/vehicle/widgets/vehicle_form_media_state.dart';
+import 'package:auto_care/features/vehicle/widgets/vehicle_form_widgets.dart';
 import 'package:auto_care/utils/media_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
 import 'package:auto_care/utils/user_session.dart';
@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 
-/// Shared vehicle form fields, validation, and media handling for add / detail.
 class VehicleFormBody extends StatefulWidget {
   const VehicleFormBody({
     super.key,
@@ -61,17 +60,22 @@ class VehicleFormBodyState extends State<VehicleFormBody> {
     _location = TextEditingController(text: record?.location ?? '');
     _ownerName = TextEditingController(text: record?.ownerName ?? '');
     _ownerContact = TextEditingController(text: record?.ownerContact ?? '');
-    _userName = TextEditingController(
-      text: record?.userName ?? UserSession.userName ?? '',
-    );
+    _userName = TextEditingController(text: _initialUserName(record));
 
     _media = VehicleFormMediaState(
       videoPath: record?.videoPath,
       imagePaths: record?.imagePaths,
       imageMetadata: record?.imageMetadata,
-      rcFrontPath: record?.rcFrontPath,
-      rcBackPath: record?.rcBackPath,
+
+ 
     );
+  }
+
+  String _initialUserName(VehicleRecord? record) {
+    final fromRecord = record?.userName.trim() ?? '';
+    if (fromRecord.isNotEmpty) return fromRecord;
+
+    return UserSession.resolvedUserName() ?? '';
   }
 
   String? _validDropdownValue(String? value, List<String> options) {
@@ -112,13 +116,13 @@ class VehicleFormBodyState extends State<VehicleFormBody> {
   Future<void> _uploadRcFront() async {
     final path = await MediaHelper.pickImage(context);
     if (path == null || !mounted) return;
-    setState(() => _media.rcFrontPath = path);
+    setState(() => _media.setRcFront(path));
   }
 
   Future<void> _uploadRcBack() async {
     final path = await MediaHelper.pickImage(context);
     if (path == null || !mounted) return;
-    setState(() => _media.rcBackPath = path);
+    setState(() => _media.setRcBack(path));
   }
 
   void _removeImage(int index) {

@@ -1,7 +1,7 @@
 import 'package:auto_care/constants/app_layout.dart';
-import 'package:auto_care/models/vehicle_record_list_model.dart';
-import 'package:auto_care/features/vehicle/vehicle_form_body.dart';
-import 'package:auto_care/features/vehicle/vehicle_form_widgets.dart';
+import 'package:auto_care/features/vehicle/models/vehicle_record_list_model.dart';
+import 'package:auto_care/features/vehicle/widgets/vehicle_form_body.dart';
+import 'package:auto_care/features/vehicle/widgets/vehicle_form_widgets.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
 import 'package:flutter/material.dart';

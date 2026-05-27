@@ -1,6 +1,6 @@
 import 'package:auto_care/features/Home/models/case_model.dart';
 import 'package:auto_care/features/Home/services/cases_service.dart';
-import 'package:auto_care/models/vehicle_record_list_model.dart';
+import 'package:auto_care/features/vehicle/models/vehicle_record_list_model.dart';
 import 'package:auto_care/utils/segment_type_helper.dart';
 import 'package:auto_care/utils/user_session.dart';
 import 'package:flutter/material.dart';
@@ -126,8 +126,8 @@ class HomeController extends GetxController {
         );
   }
 
-  void prependFromVehicleRecord(VehicleRecord record) {
-    cases.insert(0, CaseModel.fromVehicleRecord(record));
+  void prependCase(CaseModel caseModel) {
+    cases.insert(0, caseModel);
   }
 
   void updateCaseFromVehicleRecord(

@@ -2,9 +2,10 @@ import 'dart:async';
 
 import 'package:auto_care/constants/app_layout.dart';
 import 'package:auto_care/features/Home/controllers/home_controller.dart';
-import 'package:auto_care/features/vehicle/add_vehicle_page.dart';
-import 'package:auto_care/features/vehicle/vehicle_detail_page.dart';
-import 'package:auto_care/models/vehicle_record_list_model.dart';
+import 'package:auto_care/features/Home/models/case_model.dart';
+import 'package:auto_care/features/vehicle/view/add_vehicle_page.dart';
+import 'package:auto_care/features/vehicle/models/vehicle_record_list_model.dart';
+import 'package:auto_care/features/vehicle/view/vehicle_detail_page.dart';
 import 'package:auto_care/starting_page.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
@@ -39,11 +40,11 @@ class _HomeRequestListPageState extends State<HomeRequestListPage> {
   }
 
   Future<void> _openAddVehicle() async {
-    final result = await Navigator.of(context).push<VehicleRecord>(
-   MaterialPageRoute(builder: (context) =>const AddVehiclePage()),
+    final result = await Navigator.of(context).push<CaseModel>(
+      MaterialPageRoute(builder: (context) => const AddVehiclePage()),
     );
     if (result == null || !mounted) return;
-    _homeController.prependFromVehicleRecord(result);
+    _homeController.prependCase(result);
   }
 
   Future<void> _openVehicleDetail(HomeListRow row) async {

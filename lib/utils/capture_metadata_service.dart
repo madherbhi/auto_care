@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:auto_care/models/vehicle_image_capture.dart';
+import 'package:auto_care/features/vehicle/models/vehicle_image_capture.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:geocoding/geocoding.dart';

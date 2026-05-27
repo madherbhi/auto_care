@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:auto_care/features/vehicle/capture_overlay_widgets.dart';
-import 'package:auto_care/models/vehicle_image_capture.dart';
+import 'package:auto_care/features/vehicle/widgets/capture_overlay_widgets.dart';
+import 'package:auto_care/features/vehicle/models/vehicle_image_capture.dart';
 import 'package:auto_care/utils/capture_metadata_service.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/image_stamp_helper.dart';

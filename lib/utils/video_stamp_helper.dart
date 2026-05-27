@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:auto_care/models/vehicle_image_capture.dart';
+import 'package:auto_care/features/vehicle/models/vehicle_image_capture.dart';
 import 'package:auto_care/utils/image_stamp_helper.dart';
 import 'package:image/image.dart' as img;
 import 'package:path/path.dart' as p;

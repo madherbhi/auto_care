@@ -1,5 +1,6 @@
 import 'package:auto_care/features/Authentication/models/auth_models.dart';
 import 'package:auto_care/features/Authentication/services/auth_service.dart';
+import 'package:auto_care/utils/jwt_helper.dart';
 import 'package:auto_care/utils/user_session.dart';
 import 'package:get/get.dart';
 
@@ -40,9 +41,16 @@ class AuthController extends GetxController {
       );
       await _service.register(request);
       UserSession.setUserName(username);
+      await UserSession.rememberUsernameForMail(email, username);
       await UserSession.persist();
       return true;
     } catch (e) {
+      final message = _humanizeError(e).toLowerCase();
+      if (message.contains('already exists')) {
+        UserSession.setUserName(username);
+        await UserSession.rememberUsernameForMail(email, username);
+        await UserSession.persist();
+      }
       errorMessage.value = _humanizeError(e);
       return false;
     } finally {
@@ -78,8 +86,21 @@ class AuthController extends GetxController {
     try {
       final request = LoginRequest(mailId: mailId, password: password);
       final response = await _service.login(request);
-      if (response.username != null && response.username!.trim().isNotEmpty) {
-        UserSession.setUserName(response.username!);
+      var username = response.username?.trim() ?? '';
+      if (username.isEmpty || UserSession.isLikelyEmail(username)) {
+        username = JwtHelper.usernameFromToken(response.token)?.trim() ?? '';
+      }
+      if (username.isNotEmpty && !UserSession.isLikelyEmail(username)) {
+        UserSession.setUserName(username);
+      } else {
+        await UserSession.restoreUsernameForMail(mailId);
+        if (UserSession.displayUserName == null) {
+          final fromJwt =
+              JwtHelper.usernameFromToken(response.token)?.trim() ?? '';
+          if (fromJwt.isNotEmpty && !UserSession.isLikelyEmail(fromJwt)) {
+            UserSession.setUserName(fromJwt);
+          }
+        }
       }
       UserSession.setAuthToken(response.token);
       await UserSession.persist();

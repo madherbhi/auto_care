@@ -1,27 +1,43 @@
-import 'package:auto_care/models/vehicle_image_capture.dart';
-import 'package:auto_care/models/vehicle_record_list_model.dart';
+import 'package:auto_care/features/vehicle/models/vehicle_image_capture.dart';
+import 'package:auto_care/features/vehicle/models/vehicle_record_list_model.dart';
 import 'package:auto_care/utils/capture_metadata_service.dart';
 
-/// Holds video, photos, and RC uploads for the vehicle form.
+
 class VehicleFormMediaState {
   VehicleFormMediaState({
     this.videoPath,
     List<String>? imagePaths,
     List<VehicleImageMetadata>? imageMetadata,
-    this.rcFrontPath,
-    this.rcBackPath,
+    List<String>? rcImages,
   })  : imagePaths = List<String>.from(imagePaths ?? const []),
         imageMetadata = List<VehicleImageMetadata>.from(
           imageMetadata ?? const [],
         ) {
+    final rc = List<String>.from(rcImages ?? const []);
+    if (rc.isNotEmpty) _rcFrontPath = rc.first;
+    if (rc.length > 1) _rcBackPath = rc[1];
     _fillMissingMetadata();
   }
 
   String? videoPath;
   final List<String> imagePaths;
   final List<VehicleImageMetadata> imageMetadata;
-  String? rcFrontPath;
-  String? rcBackPath;
+
+  String? _rcFrontPath;
+  String? _rcBackPath;
+
+  String? get rcFrontPath => _rcFrontPath;
+
+  String? get rcBackPath => _rcBackPath;
+
+  void setRcFront(String path) => _rcFrontPath = path;
+
+  void setRcBack(String path) => _rcBackPath = path;
+
+  List<String> get rcImages => [
+        if (_rcFrontPath != null) _rcFrontPath!,
+        if (_rcBackPath != null) _rcBackPath!,
+      ];
 
   void _fillMissingMetadata() {
     while (imageMetadata.length < imagePaths.length) {
@@ -85,8 +101,7 @@ class VehicleFormMediaState {
       videoPath: videoPath,
       imagePaths: List.unmodifiable(imagePaths),
       imageMetadata: List.unmodifiable(imageMetadata),
-      rcFrontPath: rcFrontPath,
-      rcBackPath: rcBackPath,
+      rcImages: rcImages,
     );
   }
 }
