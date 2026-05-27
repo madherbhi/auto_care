@@ -4,8 +4,7 @@ import 'package:auto_care/utils/user_session.dart';
 import 'package:get/get.dart';
 
 class AuthController extends GetxController {
-  AuthController({AuthService? service})
-      : _service = service ?? AuthService();
+  AuthController({AuthService? service}) : _service = service ?? AuthService();
 
   final AuthService _service;
 
@@ -51,7 +50,7 @@ class AuthController extends GetxController {
     }
   }
 
- Future<bool> registerAndLogin({
+  Future<bool> registerAndLogin({
     required String username,
     required String password,
     required String mobileNumber,
@@ -71,19 +70,13 @@ class AuthController extends GetxController {
     return login(mailId: email, password: password);
   }
 
-  Future<bool> login({
-    required String mailId,
-    required String password,
-  }) async {
+  Future<bool> login({required String mailId, required String password}) async {
     if (isLoggingIn.value) return false;
 
     isLoggingIn.value = true;
     errorMessage.value = null;
     try {
-      final request = LoginRequest(
-        mailId: mailId,
-        password: password,
-      );
+      final request = LoginRequest(mailId: mailId, password: password);
       final response = await _service.login(request);
       if (response.username != null && response.username!.trim().isNotEmpty) {
         UserSession.setUserName(response.username!);
@@ -98,5 +91,13 @@ class AuthController extends GetxController {
       isLoggingIn.value = false;
     }
   }
-}
 
+  Future<List<BankCode>> fetchBankCodes() async {
+    try {
+      return await _service.fetchBankCodes(token: UserSession.authToken);
+    } catch (e) {
+      errorMessage.value = _humanizeError(e);
+      rethrow;
+    }
+  }
+}

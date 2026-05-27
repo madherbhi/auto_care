@@ -34,38 +34,27 @@ class RegisterRequest {
 }
 
 class LoginRequest {
-  LoginRequest({
-    required this.mailId,
-    required this.password,
-  });
+  LoginRequest({required this.mailId, required this.password});
 
   final String mailId;
   final String password;
 
   Map<String, dynamic> toJson() {
-    return {
-      'mailId': mailId,
-      'password': password,
-    };
+    return {'mailId': mailId, 'password': password};
   }
 }
 
 class LoginResponse {
-  LoginResponse({
-    required this.token,
-    this.username,
-  });
+  LoginResponse({required this.token, this.username});
 
   final String token;
   final String? username;
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
-    final resolvedUsername = (json['username'] ??
-            json['userName'] ??
-            json['name'] ??
-            '')
-        .toString()
-        .trim();
+    final resolvedUsername =
+        (json['username'] ?? json['userName'] ?? json['name'] ?? '')
+            .toString()
+            .trim();
     return LoginResponse(
       token: (json['token'] ?? '').toString(),
       username: resolvedUsername.isEmpty ? null : resolvedUsername,
@@ -73,3 +62,19 @@ class LoginResponse {
   }
 }
 
+class BankCode {
+  BankCode({required this.id, required this.bankCode, required this.bankName});
+
+  final int? id;
+  final String bankCode;
+  final String bankName;
+
+  factory BankCode.fromJson(Map<String, dynamic> json) {
+    final parsedId = int.tryParse((json['id'] ?? '').toString());
+    return BankCode(
+      id: parsedId,
+      bankCode: (json['bankCode'] ?? '').toString().trim(),
+      bankName: (json['bankName'] ?? '').toString().trim(),
+    );
+  }
+}

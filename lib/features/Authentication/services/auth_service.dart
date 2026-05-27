@@ -23,9 +23,6 @@ class AuthService {
     if (body != null) {
       // Avoid logging raw passwords.
       final sanitized = Map<String, dynamic>.from(body);
-      if (sanitized.containsKey('password')) {
-        sanitized['password'] = '***';
-      }
       debugPrint('[$endpointName] BODY => ${jsonEncode(sanitized)}');
     }
   }
@@ -39,7 +36,9 @@ class AuthService {
     final bodyPreview = responseBody.length > 500
         ? '${responseBody.substring(0, 500)}...'
         : responseBody;
-    debugPrint('[$endpointName] Response <= $uri status=$statusCode body=$bodyPreview');
+    debugPrint(
+      '[$endpointName] Response <= $uri status=$statusCode body=$bodyPreview',
+    );
   }
 
   /// Extracts the user-facing `message` from API error JSON responses.
@@ -69,9 +68,7 @@ class AuthService {
 
     final response = await _client.post(
       uri,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: {'Content-Type': 'application/json'},
       body: jsonEncode(body),
     );
 
@@ -104,9 +101,7 @@ class AuthService {
 
     final response = await _client.post(
       uri,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: {'Content-Type': 'application/json'},
       body: jsonEncode(body),
     );
 
@@ -126,9 +121,51 @@ class AuthService {
       );
     }
 
-    final Map<String, dynamic> json =
-        response.body.isNotEmpty ? jsonDecode(response.body) : {};
+    final Map<String, dynamic> json = response.body.isNotEmpty
+        ? jsonDecode(response.body)
+        : {};
     return LoginResponse.fromJson(json);
   }
-}
 
+  Future<List<BankCode>> fetchBankCodes({String? token}) async {
+    final uri = Uri.parse('$_baseUrl/get/banks/codes');
+    debugPrint('[BANK_CODES] GET => $uri');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final trimmedToken = token?.trim() ?? '';
+    if (trimmedToken.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $trimmedToken';
+    }
+
+    final response = await _client.get(uri, headers: headers);
+    _logResponse(
+      uri: uri,
+      endpointName: 'BANK_CODES',
+      statusCode: response.statusCode,
+      responseBody: response.body,
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _apiErrorMessage(
+          response.body,
+          'Unable to fetch bank list. Please try again.',
+        ),
+      );
+    }
+
+    final decoded = response.body.isNotEmpty ? jsonDecode(response.body) : [];
+    final rawList = decoded is List
+        ? decoded
+        : (decoded is Map<String, dynamic> && decoded['data'] is List
+              ? decoded['data'] as List
+              : const []);
+
+    return rawList
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .map(BankCode.fromJson)
+        .where((bank) => bank.bankName.isNotEmpty && bank.bankCode.isNotEmpty)
+        .toList();
+  }
+}
