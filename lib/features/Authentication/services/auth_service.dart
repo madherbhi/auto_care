@@ -42,6 +42,21 @@ class AuthService {
     debugPrint('[$endpointName] Response <= $uri status=$statusCode body=$bodyPreview');
   }
 
+  /// Extracts the user-facing `message` from API error JSON responses.
+  String _apiErrorMessage(String body, String fallback) {
+    if (body.isEmpty) return fallback;
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map<String, dynamic>) {
+        final message = (decoded['message'] ?? '').toString().trim();
+        if (message.isNotEmpty) return message;
+      }
+    } catch (_) {
+      // Body is not JSON; show as-is if it looks like plain text.
+    }
+    return body;
+  }
+
   Future<void> register(RegisterRequest request) async {
     final uri = Uri.parse('$_baseUrl/auth/register');
     final body = request.toJson();
@@ -68,9 +83,11 @@ class AuthService {
     );
 
     if (response.statusCode != 201) {
-      final body = response.body;
       throw Exception(
-        body.isNotEmpty ? body : 'Registration failed. Please try again.',
+        _apiErrorMessage(
+          response.body,
+          'Registration failed. Please try again.',
+        ),
       );
     }
   }
@@ -81,7 +98,7 @@ class AuthService {
     _logRequest(
       uri: uri,
       endpointName: 'AUTH_LOGIN',
-      userHint: request.username,
+      userHint: request.mailId,
       body: body,
     );
 
@@ -101,9 +118,11 @@ class AuthService {
     );
 
     if (response.statusCode != 200) {
-      final body = response.body;
       throw Exception(
-        body.isNotEmpty ? body : 'Login failed. Please check your credentials.',
+        _apiErrorMessage(
+          response.body,
+          'Login failed. Please check your credentials.',
+        ),
       );
     }
 

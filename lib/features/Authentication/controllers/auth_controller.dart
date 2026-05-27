@@ -13,6 +13,11 @@ class AuthController extends GetxController {
   final RxBool isLoggingIn = false.obs;
   final RxnString errorMessage = RxnString();
 
+  String _humanizeError(Object error) {
+    final raw = error.toString().trim();
+    return raw.startsWith('Exception: ') ? raw.substring(11).trim() : raw;
+  }
+
   Future<bool> register({
     required String username,
     required String password,
@@ -39,7 +44,7 @@ class AuthController extends GetxController {
       await UserSession.persist();
       return true;
     } catch (e) {
-      errorMessage.value = e.toString();
+      errorMessage.value = _humanizeError(e);
       return false;
     } finally {
       isRegistering.value = false;
@@ -63,11 +68,11 @@ class AuthController extends GetxController {
       companyId: companyId,
     );
     if (!registered) return false;
-    return login(username: username, password: password);
+    return login(mailId: email, password: password);
   }
 
   Future<bool> login({
-    required String username,
+    required String mailId,
     required String password,
   }) async {
     if (isLoggingIn.value) return false;
@@ -76,16 +81,18 @@ class AuthController extends GetxController {
     errorMessage.value = null;
     try {
       final request = LoginRequest(
-        username: username,
+        mailId: mailId,
         password: password,
       );
       final response = await _service.login(request);
-      UserSession.setUserName(username);
+      if (response.username != null && response.username!.trim().isNotEmpty) {
+        UserSession.setUserName(response.username!);
+      }
       UserSession.setAuthToken(response.token);
       await UserSession.persist();
       return true;
     } catch (e) {
-      errorMessage.value = e.toString();
+      errorMessage.value = _humanizeError(e);
       return false;
     } finally {
       isLoggingIn.value = false;

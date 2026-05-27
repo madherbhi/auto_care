@@ -25,11 +25,13 @@ class StringHelper {
   static const String enterPassword = "Enter password";
   static const String enterMobile = "Enter mobile number";
   static const String enterEmail = "Enter email";
-  static const String mobileNumberRequired = "Mobile number is required";
+  static const String usernameRequired = "Please enter your username";
+  static const String passwordRequired = "Please enter your password";
+  static const String mobileNumberRequired = "Please enter your mobile number";
   static const String mobileNumberInvalid =
-      "Enter a valid 10-digit mobile number";
-  static const String emailRequired = "Email is required";
-  static const String emailInvalid = "Enter a valid email address";
+      "Please enter a valid 10-digit mobile number";
+  static const String emailRequired = "Please enter your email address";
+  static const String emailInvalid = "Please enter a valid email address";
   static const String registerSignUp = "REGISTER / SIGN UP";
   static const String exit = "Exit";
   static const String welcomeBack = "Welcome Back";
@@ -61,7 +63,10 @@ class StringHelper {
   static const String bankIdLabel = "BANK ID";
   static const String selectBank = "Select bank";
   static const String selectBankId = "Select bank / branch ID";
-  static const String selectBankFirst = "Select a bank first";
+  static const String selectBankFirst =
+      "Please select a bank before choosing a branch";
+  static const String bankRequired = "Please select your bank";
+  static const String bankIdRequired = "Please select your bank branch ID";
 
   static const String inspectionRequestListTitle = "Inspection Request List";
   static const String addNew = "Add New";

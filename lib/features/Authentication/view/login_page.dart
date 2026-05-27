@@ -7,6 +7,7 @@ import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
 import 'package:auto_care/utils/navigation_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
+import 'package:auto_care/utils/vehicle_validator.dart';
 import 'package:auto_care/widgets/auth_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -21,7 +22,7 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _username = TextEditingController();
+  final _mailId = TextEditingController();
   final _password = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
@@ -35,7 +36,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   void dispose() {
-    _username.dispose();
+    _mailId.dispose();
     _password.dispose();
     super.dispose();
   }
@@ -136,12 +137,13 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                               Gap(AuthResponsive.gapBeforeFieldsLogin(h)),
                               AuthLoginField(
-                                label: StringHelper.username,
-                                hint: StringHelper.enterUsername,
-                                controller: _username,
-                                prefixIcon: Icons.person_outline_rounded,
+                                label: StringHelper.email,
+                                hint: StringHelper.enterEmail,
+                                controller: _mailId,
+                                prefixIcon: Icons.mail_outline_rounded,
                                 textInputAction: TextInputAction.next,
-                                keyboardType: TextInputType.text,
+                                keyboardType: TextInputType.emailAddress,
+                                validator: VehicleValidator.email,
                               ),
                               Gap(gapLarge),
                               AuthLoginField(
@@ -155,6 +157,10 @@ class _LoginPageState extends State<LoginPage> {
                                   () => _obscurePassword = !_obscurePassword,
                                 ),
                                 textInputAction: TextInputAction.done,
+                                validator: (value) => VehicleValidator.required(
+                                  value,
+                                  message: StringHelper.passwordRequired,
+                                ),
                               ),
                               Gap(AuthResponsive.gapForgotPassword(h)),
                               Align(
@@ -205,11 +211,21 @@ class _LoginPageState extends State<LoginPage> {
                                           final navigator = Navigator.of(context);
                                           final success =
                                               await _authController.login(
-                                            username: _username.text,
+                                            mailId: _mailId.text,
                                             password: _password.text,
                                           );
                                           if (!mounted) return;
                                           if (success) {
+                                            Get.snackbar(
+                                              'Success',
+                                              'Logged in successfully.',
+                                              snackPosition:
+                                                  SnackPosition.BOTTOM,
+                                              backgroundColor: Colors.green
+                                                  .shade700
+                                                  .withValues(alpha: 0.95),
+                                              colorText: Colors.white,
+                                            );
                                             navigator.pushAndRemoveUntil(
                                               appRoute<void>(
                                                 const HomeRequestListPage(),
@@ -227,6 +243,10 @@ class _LoginPageState extends State<LoginPage> {
                                                 message,
                                                 snackPosition:
                                                     SnackPosition.BOTTOM,
+                                                backgroundColor: Colors.red
+                                                    .shade700
+                                                    .withValues(alpha: 0.95),
+                                                colorText: Colors.white,
                                               );
                                             }
                                           }

@@ -35,28 +35,41 @@ class RegisterRequest {
 
 class LoginRequest {
   LoginRequest({
-    required this.username,
+    required this.mailId,
     required this.password,
   });
 
-  final String username;
+  final String mailId;
   final String password;
 
   Map<String, dynamic> toJson() {
     return {
-      'username': username,
+      'mailId': mailId,
       'password': password,
     };
   }
 }
 
 class LoginResponse {
-  LoginResponse({required this.token});
+  LoginResponse({
+    required this.token,
+    this.username,
+  });
 
   final String token;
+  final String? username;
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
-    return LoginResponse(token: (json['token'] ?? '').toString());
+    final resolvedUsername = (json['username'] ??
+            json['userName'] ??
+            json['name'] ??
+            '')
+        .toString()
+        .trim();
+    return LoginResponse(
+      token: (json['token'] ?? '').toString(),
+      username: resolvedUsername.isEmpty ? null : resolvedUsername,
+    );
   }
 }
 

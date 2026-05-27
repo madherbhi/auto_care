@@ -178,6 +178,10 @@ class _RegisterPageState extends State<RegisterPage> {
                                 prefixIcon: Icons.person_outline_rounded,
                                 textInputAction: TextInputAction.next,
                                 keyboardType: TextInputType.name,
+                                validator: (value) => VehicleValidator.required(
+                                  value,
+                                  message: StringHelper.usernameRequired,
+                                ),
                               ),
                               Gap(gapLarge),
                               AuthLoginField(
@@ -191,6 +195,10 @@ class _RegisterPageState extends State<RegisterPage> {
                                   () => _obscurePassword = !_obscurePassword,
                                 ),
                                 textInputAction: TextInputAction.next,
+                                validator: (value) => VehicleValidator.required(
+                                  value,
+                                  message: StringHelper.passwordRequired,
+                                ),
                               ),
                               Gap(gapLarge),
                               AuthLoginField(
@@ -224,8 +232,10 @@ class _RegisterPageState extends State<RegisterPage> {
                                 value: _selectedBank,
                                 prefixIcon: Icons.account_balance_outlined,
                                 onChanged: _onBankChanged,
-                                validator: (v) =>
-                                    v == null || v.isEmpty ? 'Required' : null,
+                                validator: (v) => VehicleValidator.required(
+                                  v,
+                                  message: StringHelper.bankRequired,
+                                ),
                               ),
                               Gap(gapLarge),
                               AuthLoginDropdown(
@@ -238,11 +248,16 @@ class _RegisterPageState extends State<RegisterPage> {
                                     ? (_) {}
                                     : (id) =>
                                         setState(() => _selectedBankId = id),
-                                validator: bankIdItems.isEmpty
-                                    ? null
-                                    : (v) => v == null || v.isEmpty
-                                        ? 'Required'
-                                        : null,
+                                validator: (v) {
+                                  if (_selectedBank == null ||
+                                      _selectedBank!.isEmpty) {
+                                    return StringHelper.selectBankFirst;
+                                  }
+                                  if (v == null || v.isEmpty) {
+                                    return StringHelper.bankIdRequired;
+                                  }
+                                  return null;
+                                },
                               ),
                               Gap(gapAfterFields),
                               Obx(
@@ -258,20 +273,6 @@ class _RegisterPageState extends State<RegisterPage> {
                                               if (!(_formKey.currentState
                                                       ?.validate() ??
                                                   false)) {
-                                                return;
-                                              }
-                                              if (_selectedBank == null ||
-                                                  _selectedBankId == null) {
-                                                Get.snackbar(
-                                                  'Missing details',
-                                                  'Please select bank and bank ID.',
-                                                  snackPosition:
-                                                      SnackPosition.BOTTOM,
-                                                  backgroundColor: Colors.red
-                                                      .shade700
-                                                      .withValues(alpha: 0.95),
-                                                  colorText: Colors.white,
-                                                );
                                                 return;
                                               }
                                               FocusScope.of(context).unfocus();

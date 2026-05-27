@@ -13,7 +13,7 @@ class VehicleValidator {
     r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
   );
 
-  static String? required(String? value, {String message = 'Required'}) {
+  static String? required(String? value, {String message = 'This field cannot be empty'}) {
     if (value == null || value.trim().isEmpty) return message;
     return null;
   }
