@@ -11,6 +11,7 @@ class AuthController extends GetxController {
 
   final RxBool isRegistering = false.obs;
   final RxBool isLoggingIn = false.obs;
+  final RxBool isResettingPassword = false.obs;
   final RxnString errorMessage = RxnString();
 
   String _humanizeError(Object error) {
@@ -110,6 +111,30 @@ class AuthController extends GetxController {
       return false;
     } finally {
       isLoggingIn.value = false;
+    }
+  }
+
+  Future<bool> forgotPassword({
+    required String mailId,
+    required String password,
+    required String confirmPassword,
+  }) async {
+    if (isResettingPassword.value) return false;
+
+    isResettingPassword.value = true;
+    errorMessage.value = null;
+    try {
+      await _service.forgotPassword(
+        mailId: mailId,
+        password: password,
+        confirmPassword: confirmPassword,
+      );
+      return true;
+    } catch (e) {
+      errorMessage.value = _humanizeError(e);
+      return false;
+    } finally {
+      isResettingPassword.value = false;
     }
   }
 

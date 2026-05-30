@@ -23,10 +23,49 @@ class AddVehicleController extends GetxController {
     final lower = message.toLowerCase();
     if (lower.contains('broken pipe') ||
         lower.contains('socketexception') ||
-        lower.contains('connection reset')) {
+        lower.contains('connection reset') ||
+        lower.contains('connection refused') ||
+        lower.contains('failed host lookup') ||
+        lower.contains('network is unreachable') ||
+        lower.contains('software caused connection abort') ||
+        lower.contains('cleartext') ||
+        lower.contains('not permitted')) {
       return StringHelper.uploadConnectionLost;
     }
+    if (lower.contains('timed out') || lower.contains('timeout')) {
+      return StringHelper.uploadTimedOut;
+    }
     return message;
+  }
+
+  Future<CaseModel?> updateCase({
+    required int caseId,
+    required VehicleRecord record,
+  }) async {
+    if (isSubmitting.value) return null;
+
+    isSubmitting.value = true;
+    errorMessage.value = null;
+    try {
+      final request = CreateCaseRequest.fromVehicleRecord(record);
+      if (request.userName.isEmpty) {
+        errorMessage.value = StringHelper.userNameRequired;
+        return null;
+      }
+
+      final token = UserSession.authToken ?? '';
+      final updated = await _service.updateCase(
+        caseId: caseId,
+        request: request,
+        token: token,
+      );
+      return updated;
+    } catch (e) {
+      errorMessage.value = _humanizeError(e);
+      return null;
+    } finally {
+      isSubmitting.value = false;
+    }
   }
 
   Future<CaseModel?> createCase(VehicleRecord record) async {

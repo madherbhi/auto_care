@@ -79,7 +79,7 @@ class StringHelper {
   static const String searchComingSoon = "Search is coming soon.";
   static const String filterComingSoon = "Filter is coming soon.";
   static const String inspectionSearchHint =
-      "Search by vehicle number or owner name";
+      "Search by vehicle number";
   static const String filter = "Filter";
 
   static const String navDashboard = "Dashboard";
@@ -151,8 +151,15 @@ class StringHelper {
   static const String uploadConnectionLost =
       "Connection lost while uploading. Check your network and try again.";
   static const String save = "Save";
+  static const String saving = "Saving...";
+  static const String sessionExpired =
+      "Session expired. Please log in again.";
+  static const String uploadTimedOut =
+      "Upload timed out. Try again on Wi‑Fi or with fewer photos.";
   static const String cancel = "Cancel";
   static const String update = "Update";
+  static const String updateSuccess =
+      "Inspection request updated successfully.";
   static const String removeImage = "Remove image";
 
   static const List<String> segmentTypeOptions = [

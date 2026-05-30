@@ -1,4 +1,25 @@
 import 'package:auto_care/features/vehicle/models/vehicle_record_list_model.dart';
+import 'package:auto_care/utils/string_helper.dart';
+
+class CaseMedia {
+  const CaseMedia({
+    required this.id,
+    required this.fileName,
+    required this.url,
+  });
+
+  final int id;
+  final String fileName;
+  final String url;
+
+  factory CaseMedia.fromJson(Map<String, dynamic> json) {
+    return CaseMedia(
+      id: int.tryParse((json['id'] ?? '').toString()) ?? 0,
+      fileName: (json['fileName'] ?? '').toString().trim(),
+      url: (json['url'] ?? '').toString().trim(),
+    );
+  }
+}
 
 class CaseModel {
   const CaseModel({
@@ -14,6 +35,9 @@ class CaseModel {
     required this.vehicleMake,
     required this.vehicleModel,
     required this.vehicleNumber,
+    this.images = const [],
+    this.rcImages = const [],
+    this.videos = const [],
   });
 
   final int id;
@@ -28,6 +52,9 @@ class CaseModel {
   final String vehicleMake;
   final String vehicleModel;
   final String vehicleNumber;
+  final List<CaseMedia> images;
+  final List<CaseMedia> rcImages;
+  final List<CaseMedia> videos;
 
   factory CaseModel.fromJson(Map<String, dynamic> json) {
     return CaseModel(
@@ -44,7 +71,19 @@ class CaseModel {
       vehicleMake: (json['vehicleMake'] ?? '').toString().trim(),
       vehicleModel: (json['vehicleModel'] ?? '').toString().trim(),
       vehicleNumber: (json['vehicleNumber'] ?? '').toString().trim(),
+      images: _readMediaList(json['images']),
+      rcImages: _readMediaList(json['rcImages']),
+      videos: _readMediaList(json['videos']),
     );
+  }
+
+  static List<CaseMedia> _readMediaList(Object? value) {
+    if (value is! List) return const [];
+    return value
+        .whereType<Map>()
+        .map((item) => CaseMedia.fromJson(Map<String, dynamic>.from(item)))
+        .where((media) => media.url.isNotEmpty)
+        .toList();
   }
 
   factory CaseModel.fromVehicleRecord(VehicleRecord record, {int id = 0}) {
@@ -72,7 +111,7 @@ class CaseModel {
   VehicleRecord toVehicleRecord() {
     return VehicleRecord(
       vehicleNo: vehicleNumber,
-      segmentType: segmentType,
+      segmentType: _uiSegmentType(segmentType),
       caseType: displayCaseType,
       vehicleMake: vehicleMake,
       vehicleModel: vehicleModel,
@@ -80,6 +119,40 @@ class CaseModel {
       ownerName: proposedOwnerName,
       ownerContact: proposedOwnerContactNo,
       userName: userName,
+      imagePaths: images.map((m) => m.url).where((url) => url.isNotEmpty).toList(),
+      videoPath: videos.isNotEmpty ? videos.first.url : null,
+      rcImages: rcImages.map((m) => m.url).where((url) => url.isNotEmpty).toList(),
     );
+  }
+
+  CaseModel mergeMediaFrom(CaseModel other) {
+    return CaseModel(
+      id: id,
+      caseType: caseType,
+      createdAt: createdAt,
+      location: location,
+      proposedOwnerContactNo: proposedOwnerContactNo,
+      proposedOwnerName: proposedOwnerName,
+      segmentType: segmentType,
+      status: status,
+      userName: userName,
+      vehicleMake: vehicleMake,
+      vehicleModel: vehicleModel,
+      vehicleNumber: vehicleNumber,
+      images: images.isNotEmpty ? images : other.images,
+      rcImages: rcImages.isNotEmpty ? rcImages : other.rcImages,
+      videos: videos.isNotEmpty ? videos : other.videos,
+    );
+  }
+
+  static String _uiSegmentType(String apiValue) {
+    final trimmed = apiValue.trim();
+    if (trimmed.toLowerCase() == 'cars' || trimmed.toLowerCase() == 'car') {
+      return 'Car';
+    }
+    for (final option in StringHelper.segmentTypeOptions) {
+      if (option.toLowerCase() == trimmed.toLowerCase()) return option;
+    }
+    return trimmed;
   }
 }

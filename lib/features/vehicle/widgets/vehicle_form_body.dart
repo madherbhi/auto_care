@@ -66,8 +66,7 @@ class VehicleFormBodyState extends State<VehicleFormBody> {
       videoPath: record?.videoPath,
       imagePaths: record?.imagePaths,
       imageMetadata: record?.imageMetadata,
-
- 
+      rcImages: record?.rcImages,
     );
   }
 

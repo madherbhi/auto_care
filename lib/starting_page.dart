@@ -3,6 +3,7 @@ import 'package:auto_care/features/Authentication/view/login_page.dart';
 import 'package:auto_care/features/Authentication/view/register_page.dart';
 import 'package:auto_care/widgets/custom_action_button.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
@@ -20,7 +21,12 @@ class StartingPage extends StatelessWidget {
       MediaQuery.sizeOf(context).width,
     );
 
-    return StartingLayoutScope(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) SystemNavigator.pop();
+      },
+      child: StartingLayoutScope(
       scale: scale,
       child: Scaffold(
         backgroundColor: ColorHelper.white,
@@ -152,6 +158,7 @@ class StartingPage extends StatelessWidget {
             },
           ),
         ),
+      ),
       ),
     );
   }

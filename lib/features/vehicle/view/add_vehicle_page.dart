@@ -55,11 +55,13 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
       backgroundColor: ColorHelper.primaryBlue,
       resizeToAvoidBottomInset: true,
       appBar: const VehicleFormAppBar(title: StringHelper.addVehicleTitle),
-      body: SafeArea(
-        top: false,
-        child: Column(
-          children: [
-            Expanded(
+      body: Stack(
+        children: [
+          SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 padding: EdgeInsets.fromLTRB(
@@ -82,15 +84,44 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
                   ),
                 ),
               ),
+                ),
+                Obx(
+                  () => VehicleFormSaveBar(
+                    label: _controller.isSubmitting.value
+                        ? StringHelper.saving
+                        : StringHelper.save,
+                    onPressed:
+                        _controller.isSubmitting.value ? null : _onSave,
+                  ),
+                ),
+              ],
             ),
-            Obx(
-              () => VehicleFormSaveBar(
-                label: StringHelper.save,
-                onPressed: _controller.isSubmitting.value ? null : _onSave,
-              ),
-            ),
-          ],
-        ),
+          ),
+          Obx(
+            () {
+              if (!_controller.isSubmitting.value) {
+                return const SizedBox.shrink();
+              }
+              return Container(
+                color: Colors.black38,
+                alignment: Alignment.center,
+                child: const Card(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text(StringHelper.saving),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }

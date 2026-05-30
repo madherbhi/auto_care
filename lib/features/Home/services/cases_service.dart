@@ -1,64 +1,41 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:auto_care/constants/api_endpoints.dart';
 import 'package:auto_care/features/Home/models/case_model.dart';
 import 'package:auto_care/features/vehicle/models/create_case_request.dart';
+import 'package:auto_care/services/api_client.dart';
+import 'package:auto_care/utils/media_compress_helper.dart';
+import 'package:auto_care/utils/media_path_helper.dart';
+import 'package:auto_care/utils/string_helper.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:http/io_client.dart';
+import 'package:http_parser/http_parser.dart';
 
 class CasesService {
-  CasesService({http.Client? client})
-      : _client = client ?? _defaultClient(),
-        _uploadClient = client ?? _createUploadClient();
+  CasesService({ApiClient? client}) : _client = client ?? ApiClient();
 
-  static http.Client _defaultClient() => http.Client();
-
-  static http.Client _createUploadClient() {
-    final httpClient = HttpClient()
-      ..connectionTimeout = const Duration(seconds: 30)
-      ..idleTimeout = const Duration(minutes: 5);
-    return IOClient(httpClient);
-  }
-
-  final http.Client _client;
-  final http.Client _uploadClient;
-
-  static const String _baseUrl = 'http://35.154.202.121:8080';
-
-  String _apiErrorMessage(String body, String fallback) {
-    if (body.isEmpty) return fallback;
-    try {
-      final decoded = jsonDecode(body);
-      if (decoded is Map<String, dynamic>) {
-        final message = (decoded['message'] ?? '').toString().trim();
-        if (message.isNotEmpty) return message;
-      }
-    } catch (_) {}
-    return body;
-  }
+  final ApiClient _client;
 
   Future<List<CaseModel>> fetchAllCases({required String token}) async {
-    final uri = Uri.parse('$_baseUrl/api/cases/get/all/cases');
-    debugPrint('[CASES_ALL] GET => $uri');
-
     final trimmedToken = token.trim();
-    final headers = <String, String>{'Content-Type': 'application/json'};
-    if (trimmedToken.isNotEmpty) {
-      headers['Authorization'] = 'Bearer $trimmedToken';
+    if (trimmedToken.isEmpty) {
+      throw Exception(StringHelper.sessionExpired);
     }
 
-    final response = await _client.get(uri, headers: headers);
-    final bodyPreview = response.body.length > 500
-        ? '${response.body.substring(0, 500)}...'
-        : response.body;
-    debugPrint(
-      '[CASES_ALL] Response <= $uri status=${response.statusCode} body=$bodyPreview',
+    final response = await _client.get(
+      ApiEndpoints.casesAll,
+      token: trimmedToken,
+      endpointName: 'CASES_ALL',
     );
+
+    if (response.statusCode == 401 || response.statusCode == 403) {
+      throw Exception(StringHelper.sessionExpired);
+    }
 
     if (response.statusCode != 200) {
       throw Exception(
-        _apiErrorMessage(
+        _client.apiErrorMessage(
           response.body,
           'Unable to load inspection requests. Please try again.',
         ),
@@ -83,58 +60,145 @@ class CasesService {
     required CreateCaseRequest request,
     required String token,
   }) async {
-    final uri = Uri.parse('$_baseUrl/api/cases/create').replace(
+    final uri = Uri.parse(ApiEndpoints.casesCreate).replace(
       queryParameters: request.toQueryParameters(),
     );
-    debugPrint('[CASES_CREATE] POST => $uri');
+    final trimmedToken = token.trim();
+    if (trimmedToken.isEmpty) {
+      throw Exception(StringHelper.sessionExpired);
+    }
 
     final multipart = http.MultipartRequest('POST', uri);
-    final trimmedToken = token.trim();
-    if (trimmedToken.isNotEmpty) {
-      multipart.headers['Authorization'] = 'Bearer $trimmedToken';
-    }
+    multipart.headers['Authorization'] = 'Bearer $trimmedToken';
 
-    for (final path in request.imagePaths) {
-      final file = await _multipartFile('images', path);
-      if (file != null) multipart.files.add(file);
-    }
+    await _attachFiles(
+      multipart,
+      field: 'images',
+      paths: MediaPathHelper.localOnly(request.imagePaths),
+      requiredLabel: null,
+    );
 
     final videoPath = request.videoPath;
-    if (videoPath != null && videoPath.isNotEmpty) {
-      final file = await _multipartFile('videos', videoPath);
-      if (file != null) multipart.files.add(file);
+    if (videoPath != null && MediaPathHelper.isLocal(videoPath)) {
+      await _attachFiles(
+        multipart,
+        field: 'videos',
+        paths: [videoPath],
+        requiredLabel: null,
+      );
     }
 
-    for (final path in request.rcImages) {
-      final file = await _multipartFile('rc', path);
-      if (file != null) multipart.files.add(file);
-    }
+    await _attachFiles(
+      multipart,
+      field: 'rcImages',
+      paths: MediaPathHelper.localOnly(request.rcImages),
+      requiredLabel: 'RC',
+    );
 
-    final streamed = await _uploadClient.send(multipart);
-    final response = await http.Response.fromStream(streamed);
-    final bodyPreview = response.body.length > 500
-        ? '${response.body.substring(0, 500)}...'
-        : response.body;
     debugPrint(
-      '[CASES_CREATE] Response <= $uri status=${response.statusCode} body=$bodyPreview',
+      '[CASES_CREATE] Uploading ${multipart.files.length} file(s), '
+      'total fields=${multipart.fields.length}',
+    );
+
+    final response = await _client.sendMultipart(
+      multipart,
+      endpointName: 'CASES_CREATE',
+      timeout: ApiClient.defaultUploadTimeout,
+      onTimeout: () => throw Exception(StringHelper.uploadTimedOut),
     );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception(
-        _apiErrorMessage(
+        _client.apiErrorMessage(
           response.body,
           'Unable to create inspection request. Please try again.',
         ),
       );
     }
 
-    if (response.body.isEmpty) {
-      return CaseModel.fromVehicleRecord(
-        request.toVehicleRecord(),
+    return _parseCaseResponse(
+      response.body,
+      fallback: () => CaseModel.fromVehicleRecord(request.toVehicleRecord()),
+    );
+  }
+
+  Future<CaseModel> updateCase({
+    required int caseId,
+    required CreateCaseRequest request,
+    required String token,
+  }) async {
+    final uri = Uri.parse(ApiEndpoints.casesUpdate(caseId)).replace(
+      queryParameters: request.toQueryParameters(),
+    );
+    final trimmedToken = token.trim();
+    if (trimmedToken.isEmpty) {
+      throw Exception(StringHelper.sessionExpired);
+    }
+
+    final multipart = http.MultipartRequest('PUT', uri);
+    multipart.headers['Authorization'] = 'Bearer $trimmedToken';
+
+    await _attachFiles(
+      multipart,
+      field: 'images',
+      paths: MediaPathHelper.localOnly(request.imagePaths),
+      requiredLabel: null,
+    );
+
+    final videoPath = request.videoPath;
+    if (videoPath != null && MediaPathHelper.isLocal(videoPath)) {
+      await _attachFiles(
+        multipart,
+        field: 'videos',
+        paths: [videoPath],
+        requiredLabel: null,
       );
     }
 
-    final decoded = jsonDecode(response.body);
+    await _attachFiles(
+      multipart,
+      field: 'rcImages',
+      paths: MediaPathHelper.localOnly(request.rcImages),
+      requiredLabel: null,
+    );
+
+    debugPrint(
+      '[CASES_UPDATE] Uploading ${multipart.files.length} file(s), '
+      'total fields=${multipart.fields.length}',
+    );
+
+    final response = await _client.sendMultipart(
+      multipart,
+      endpointName: 'CASES_UPDATE',
+      timeout: ApiClient.defaultUploadTimeout,
+      onTimeout: () => throw Exception(StringHelper.uploadTimedOut),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        _client.apiErrorMessage(
+          response.body,
+          'Unable to update inspection request. Please try again.',
+        ),
+      );
+    }
+
+    return _parseCaseResponse(
+      response.body,
+      fallback: () => CaseModel.fromVehicleRecord(
+        request.toVehicleRecord(),
+        id: caseId,
+      ),
+    );
+  }
+
+  CaseModel _parseCaseResponse(
+    String body, {
+    required CaseModel Function() fallback,
+  }) {
+    if (body.isEmpty) return fallback();
+
+    final decoded = jsonDecode(body);
     if (decoded is Map<String, dynamic>) {
       final data = decoded['data'];
       if (data is Map<String, dynamic>) {
@@ -143,19 +207,74 @@ class CasesService {
       return CaseModel.fromJson(decoded);
     }
 
-    return CaseModel.fromVehicleRecord(request.toVehicleRecord());
+    return fallback();
+  }
+
+  Future<void> _attachFiles(
+    http.MultipartRequest multipart, {
+    required String field,
+    required List<String> paths,
+    required String? requiredLabel,
+  }) async {
+    if (paths.isEmpty) {
+      if (requiredLabel != null) {
+        throw Exception('$requiredLabel images are required.');
+      }
+      return;
+    }
+
+    var attached = 0;
+    for (final path in paths) {
+      final file = await _multipartFile(field, path);
+      if (file != null) {
+        multipart.files.add(file);
+        attached++;
+      }
+    }
+
+    if (requiredLabel != null && attached < paths.length) {
+      throw Exception(
+        '$requiredLabel file could not be read. Please upload it again.',
+      );
+    }
   }
 
   Future<http.MultipartFile?> _multipartFile(String field, String path) async {
     final file = File(path);
-    if (!await file.exists()) return null;
+    if (!await file.exists()) {
+      debugPrint('[CASES_UPLOAD] Missing file for $field: $path');
+      return null;
+    }
 
-    final segments = path.split(Platform.pathSeparator);
+    final uploadPath = await MediaCompressHelper.prepareForUpload(path);
+    final uploadFile = File(uploadPath);
+    if (!await uploadFile.exists()) {
+      debugPrint('[CASES_UPLOAD] Missing compressed file for $field: $uploadPath');
+      return null;
+    }
+
+    final length = await uploadFile.length();
+    debugPrint('[CASES_UPLOAD] Attaching $field ($length bytes): $uploadPath');
+
+    final segments = uploadPath.split(Platform.pathSeparator);
     final filename = segments.isNotEmpty ? segments.last : 'upload';
     return http.MultipartFile.fromPath(
       field,
-      path,
+      uploadPath,
       filename: filename,
+      contentType: _contentTypeForPath(uploadPath),
     );
+  }
+
+  MediaType? _contentTypeForPath(String path) {
+    final lower = path.toLowerCase();
+    if (lower.endsWith('.png')) return MediaType('image', 'png');
+    if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) {
+      return MediaType('image', 'jpeg');
+    }
+    if (lower.endsWith('.webp')) return MediaType('image', 'webp');
+    if (lower.endsWith('.mp4')) return MediaType('video', 'mp4');
+    if (lower.endsWith('.mov')) return MediaType('video', 'quicktime');
+    return null;
   }
 }

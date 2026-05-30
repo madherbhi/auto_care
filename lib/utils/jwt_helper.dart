@@ -31,6 +31,23 @@ class JwtHelper {
     return null;
   }
 
+  static bool isTokenExpired(String token, {DateTime? now}) {
+    final payload = _decodePayload(token);
+    if (payload == null) return true;
+
+    final exp = payload['exp'];
+    if (exp == null) return false;
+
+    final expSeconds = exp is int ? exp : int.tryParse(exp.toString());
+    if (expSeconds == null) return false;
+
+    final clock = now ?? DateTime.now();
+    return clock.isAfter(
+      DateTime.fromMillisecondsSinceEpoch(expSeconds * 1000, isUtc: true)
+          .toLocal(),
+    );
+  }
+
   static Map<String, dynamic>? _decodePayload(String token) {
     final parts = token.split('.');
     if (parts.length < 2) return null;

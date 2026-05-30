@@ -14,6 +14,8 @@ class ColorHelper {
   static const footerBarBg = Color(0xFFF3F4F6);
   static const buttonOutline = Color(0xFFD8DADE);
   static const formActionCyan = Color(0xFF26C6DA);
+  static const successGreen = Color(0xFF2E7D32);
+  static const errorRed = Color(0xFFC62828);
 
   static final LinearGradient authScreenGradient = LinearGradient(
     begin: Alignment.topCenter,

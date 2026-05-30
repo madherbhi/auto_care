@@ -1,7 +1,9 @@
 import 'package:auto_care/features/Home/models/case_model.dart';
 import 'package:auto_care/features/Home/services/cases_service.dart';
 import 'package:auto_care/features/vehicle/models/vehicle_record_list_model.dart';
+import 'package:auto_care/utils/auth_navigation.dart';
 import 'package:auto_care/utils/segment_type_helper.dart';
+import 'package:auto_care/utils/string_helper.dart';
 import 'package:auto_care/utils/user_session.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -80,18 +82,34 @@ class HomeController extends GetxController {
     errorMessage.value = null;
     try {
       final token = UserSession.authToken ?? '';
+      if (token.isEmpty || UserSession.isTokenExpired) {
+        await _handleSessionExpired();
+        return;
+      }
       final fetched = await _service.fetchAllCases(token: token);
       cases.assignAll(fetched);
+      _sortCasesNewestFirst();
     } catch (e) {
-      errorMessage.value = _humanizeError(e);
+      final message = _humanizeError(e);
+      if (message == StringHelper.sessionExpired) {
+        await _handleSessionExpired();
+        return;
+      }
+      errorMessage.value = message;
     } finally {
       isLoading.value = false;
     }
   }
 
+  Future<void> _handleSessionExpired() async {
+    cases.clear();
+    errorMessage.value = StringHelper.sessionExpired;
+    await logoutToStartingPage();
+  }
+
   List<HomeListRow> get filteredRows {
     final q = searchQuery.value.trim().toLowerCase();
-    final source = cases;
+    final source = List<CaseModel>.from(cases)..sort(_compareNewestFirst);
     final filtered = q.isEmpty
         ? source
         : source.where(
@@ -103,6 +121,30 @@ class HomeController extends GetxController {
     return filtered.map(HomeListRow.fromCase).toList();
   }
 
+  void _sortCasesNewestFirst() {
+    cases.sort(_compareNewestFirst);
+  }
+
+  static int _compareNewestFirst(CaseModel a, CaseModel b) {
+    final aTime = _parseCreatedAt(a.createdAt);
+    final bTime = _parseCreatedAt(b.createdAt);
+    if (aTime != null && bTime != null) {
+      return bTime.compareTo(aTime);
+    }
+    if (aTime != null) return -1;
+    if (bTime != null) return 1;
+    return b.id.compareTo(a.id);
+  }
+
+  static DateTime? _parseCreatedAt(String createdAt) {
+    if (createdAt.isEmpty) return null;
+    try {
+      return DateTime.parse(createdAt).toLocal();
+    } catch (_) {
+      return null;
+    }
+  }
+
   CaseModel? caseForRegistration(String registrationNumber) {
     final normalized = registrationNumber.trim();
     for (final item in cases) {
@@ -111,8 +153,16 @@ class HomeController extends GetxController {
     return null;
   }
 
+  CaseModel? caseForId(int caseId) {
+    for (final item in cases) {
+      if (item.id == caseId) return item;
+    }
+    return null;
+  }
+
   VehicleRecord vehicleForRow(HomeListRow row) {
-    return caseForRegistration(row.registrationNumber)?.toVehicleRecord() ??
+    return caseForId(row.caseId)?.toVehicleRecord() ??
+        caseForRegistration(row.registrationNumber)?.toVehicleRecord() ??
         VehicleRecord(
           vehicleNo: row.registrationNumber,
           segmentType: 'Car',
@@ -128,6 +178,17 @@ class HomeController extends GetxController {
 
   void prependCase(CaseModel caseModel) {
     cases.insert(0, caseModel);
+    _sortCasesNewestFirst();
+  }
+
+  void replaceCase(CaseModel updated) {
+    final index = cases.indexWhere((c) => c.id == updated.id);
+    if (index >= 0) {
+      cases[index] = updated.mergeMediaFrom(cases[index]);
+    } else {
+      cases.insert(0, updated);
+    }
+    _sortCasesNewestFirst();
   }
 
   void updateCaseFromVehicleRecord(
@@ -152,6 +213,9 @@ class HomeController extends GetxController {
       vehicleMake: record.vehicleMake,
       vehicleModel: record.vehicleModel,
       vehicleNumber: record.vehicleNo,
+      images: existing.images,
+      rcImages: existing.rcImages,
+      videos: existing.videos,
     );
   }
 

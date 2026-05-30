@@ -1,16 +1,75 @@
 import 'dart:io';
 
 import 'package:auto_care/constants/app_layout.dart';
-import 'package:auto_care/starting_page.dart';
+import 'package:auto_care/utils/auth_navigation.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
+import 'package:auto_care/utils/media_path_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
-import 'package:auto_care/utils/user_session.dart';
 import 'package:auto_care/widgets/auth_shell.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
 import 'package:video_player/video_player.dart';
+
+bool _hasMediaPath(String? path) {
+  if (path == null || path.trim().isEmpty) return false;
+  if (MediaPathHelper.isRemote(path)) return true;
+  return File(path).existsSync();
+}
+
+Widget _mediaImage({
+  required String path,
+  required BoxFit fit,
+  double? width,
+  double? height,
+}) {
+  if (MediaPathHelper.isRemote(path)) {
+    return CachedNetworkImage(
+      imageUrl: path,
+      fit: fit,
+      width: width,
+      height: height,
+      placeholder: (_, __) => const ColoredBox(
+        color: ColorHelper.black,
+        child: Center(
+          child: CircularProgressIndicator(
+            color: ColorHelper.white,
+            strokeWidth: 2,
+          ),
+        ),
+      ),
+      errorWidget: (_, __, ___) => ColoredBox(
+        color: Color.lerp(ColorHelper.primaryBlue, ColorHelper.white, 0.14)!
+            .withValues(alpha: 0.35),
+        child: Icon(
+          Icons.broken_image_outlined,
+          color: ColorHelper.white.withValues(alpha: 0.7),
+        ),
+      ),
+    );
+  }
+
+  final file = File(path);
+  if (file.existsSync()) {
+    return Image.file(
+      file,
+      fit: fit,
+      width: width,
+      height: height,
+    );
+  }
+
+  return ColoredBox(
+    color: Color.lerp(ColorHelper.primaryBlue, ColorHelper.white, 0.14)!
+        .withValues(alpha: 0.35),
+    child: Icon(
+      Icons.broken_image_outlined,
+      color: ColorHelper.white.withValues(alpha: 0.7),
+    ),
+  );
+}
 
 class VehicleFormAppBar extends StatelessWidget implements PreferredSizeWidget {
   const VehicleFormAppBar({super.key, required this.title});
@@ -56,13 +115,7 @@ class VehicleFormAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       actions: [
         IconButton(
-          onPressed: () {
-            UserSession.clear();
-            Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute(builder: (context) =>const StartingPage()),
-              (_) => false,
-            );
-          },
+          onPressed: () => logoutToStartingPage(),
           icon: const Icon(Icons.logout_rounded, color: ColorHelper.white),
           tooltip: StringHelper.logout,
         ),
@@ -148,8 +201,10 @@ class VehicleVideoPreview extends StatefulWidget {
 class _VehicleVideoPreviewState extends State<VehicleVideoPreview> {
   VideoPlayerController? _controller;
 
-  bool get _hasVideo =>
-      widget.videoPath != null && File(widget.videoPath!).existsSync();
+  bool get _hasVideo => _hasMediaPath(widget.videoPath);
+
+  bool get _isRemoteVideo =>
+      widget.videoPath != null && MediaPathHelper.isRemote(widget.videoPath!);
 
   @override
   void initState() {
@@ -168,7 +223,10 @@ class _VehicleVideoPreviewState extends State<VehicleVideoPreview> {
 
   void _initController() {
     if (!_hasVideo) return;
-    final controller = VideoPlayerController.file(File(widget.videoPath!));
+    final path = widget.videoPath!;
+    final controller = _isRemoteVideo
+        ? VideoPlayerController.networkUrl(Uri.parse(path))
+        : VideoPlayerController.file(File(path));
     _controller = controller;
     controller.initialize().then((_) {
       if (!mounted || _controller != controller) return;
@@ -284,32 +342,7 @@ class _VehicleVideoPreviewState extends State<VehicleVideoPreview> {
                   ),
                 ),
               ),
-            if (ownerContact != null && ownerContact.isNotEmpty)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 12,
-                child: Center(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: ColorHelper.black.withValues(alpha: 0.55),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                      child: Text(
-                        'tel:$ownerContact',
-                        style: const TextStyle(
-                          fontFamily: FontHelper.poppinsMedium,
-                          fontSize: 13,
-                          color: ColorHelper.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-          ],
+         ],
         ),
       ),
     );
@@ -526,9 +559,13 @@ class _VehicleImageTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final file = File(path);
-    final image = file.existsSync()
-        ? Image.file(file, fit: BoxFit.cover, width: double.infinity, height: double.infinity)
+    final image = _hasMediaPath(path)
+        ? _mediaImage(
+            path: path,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+          )
         : ColoredBox(
             color: Color.lerp(ColorHelper.primaryBlue, ColorHelper.white, 0.14)!
                 .withValues(alpha: 0.35),
@@ -651,7 +688,7 @@ class VehicleRcSideCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasImage = imagePath != null && File(imagePath!).existsSync();
+    final hasImage = _hasMediaPath(imagePath);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -667,7 +704,7 @@ class VehicleRcSideCard extends StatelessWidget {
                   ? Stack(
                       fit: StackFit.expand,
                       children: [
-                        Image.file(File(imagePath!), fit: BoxFit.cover),
+                        _mediaImage(path: imagePath!, fit: BoxFit.cover),
                         Positioned(
                           top: 8,
                           right: 8,

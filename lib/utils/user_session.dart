@@ -16,7 +16,14 @@ class UserSession {
   static String? get userName => _userName;
   static String? get authToken => _authToken;
 
-  static bool get isLoggedIn => _authToken != null && _authToken!.isNotEmpty;
+  static bool get isLoggedIn =>
+      _authToken != null && _authToken!.isNotEmpty && !isTokenExpired;
+
+  static bool get isTokenExpired {
+    final token = _authToken?.trim() ?? '';
+    if (token.isEmpty) return true;
+    return JwtHelper.isTokenExpired(token);
+  }
 
   /// True when [value] looks like a login email, not a display name.
   static bool isLikelyEmail(String? value) {
@@ -46,7 +53,15 @@ class UserSession {
   static Future<void> init() async {
     _prefs ??= await SharedPreferences.getInstance();
     _userName = _prefs?.getString(_kUserName);
-    _authToken = _prefs?.getString(_kAuthToken);
+    final storedToken = _prefs?.getString(_kAuthToken);
+    _authToken = _normalizeToken(storedToken);
+    if (_authToken == null && storedToken != null && storedToken.isNotEmpty) {
+      await _prefs?.remove(_kAuthToken);
+    }
+    if (isTokenExpired) {
+      _authToken = null;
+      await _prefs?.remove(_kAuthToken);
+    }
     if (isLikelyEmail(_userName)) {
       _userName = null;
       await _prefs?.remove(_kUserName);
@@ -84,9 +99,18 @@ class UserSession {
     setUserName(remembered);
   }
 
+  static String? _normalizeToken(String? token) {
+    var trimmed = token?.trim() ?? '';
+    if (trimmed.isEmpty) return null;
+    const bearerPrefix = 'Bearer ';
+    if (trimmed.toLowerCase().startsWith(bearerPrefix.toLowerCase())) {
+      trimmed = trimmed.substring(bearerPrefix.length).trim();
+    }
+    return trimmed.isEmpty ? null : trimmed;
+  }
+
   static void setAuthToken(String token) {
-    final trimmed = token.trim();
-    _authToken = trimmed.isEmpty ? null : trimmed;
+    _authToken = _normalizeToken(token);
   }
 
   /// Persists current session values to local storage.
@@ -109,7 +133,6 @@ class UserSession {
     _authToken = null;
   }
 
-  /// Clears session values and also removes them from local storage.
   static Future<void> clearPersisted() async {
     clear();
     await persist();

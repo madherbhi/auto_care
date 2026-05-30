@@ -13,7 +13,7 @@ class CreateCaseRequest {
     required this.proposedOwnerName,
     required this.proposedOwnerContactNo,
     required this.userName,
-    this.status = 'ACTIVE',
+    this.status = 'PENDING',
     this.imagePaths = const [],
     this.videoPath,
     this.rcImages = const [],
@@ -41,8 +41,8 @@ class CreateCaseRequest {
         : (UserSession.resolvedUserName()?.trim() ?? '');
 
     return CreateCaseRequest(
-      segmentType: _apiValue(record.segmentType),
-      caseType: _apiValue(record.caseType),
+      segmentType: segmentTypeForApi(record.segmentType),
+      caseType: caseTypeForApi(record.caseType),
       vehicleNumber: record.vehicleNo.trim(),
       vehicleMake: record.vehicleMake.trim(),
       vehicleModel: record.vehicleModel.trim(),
@@ -88,5 +88,11 @@ class CreateCaseRequest {
     );
   }
 
-  static String _apiValue(String display) => display.trim().toLowerCase();
+  static String segmentTypeForApi(String display) {
+    final trimmed = display.trim();
+    if (trimmed.toLowerCase() == 'car') return 'Cars';
+    return trimmed;
+  }
+
+  static String caseTypeForApi(String display) => display.trim();
 }

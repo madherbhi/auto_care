@@ -1,16 +1,13 @@
-import 'dart:async';
-
 import 'package:auto_care/constants/app_layout.dart';
 import 'package:auto_care/features/Home/controllers/home_controller.dart';
 import 'package:auto_care/features/Home/models/case_model.dart';
 import 'package:auto_care/features/vehicle/view/add_vehicle_page.dart';
-import 'package:auto_care/features/vehicle/models/vehicle_record_list_model.dart';
 import 'package:auto_care/features/vehicle/view/vehicle_detail_page.dart';
-import 'package:auto_care/starting_page.dart';
+import 'package:auto_care/utils/app_snackbar.dart';
+import 'package:auto_care/utils/auth_navigation.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
-import 'package:auto_care/utils/user_session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
@@ -44,19 +41,22 @@ class _HomeRequestListPageState extends State<HomeRequestListPage> {
       MaterialPageRoute(builder: (context) => const AddVehiclePage()),
     );
     if (result == null || !mounted) return;
-    _homeController.prependCase(result);
+    await _homeController.loadCases();
   }
 
   Future<void> _openVehicleDetail(HomeListRow row) async {
     final initial = _homeController.vehicleForRow(row);
-    final result = await Navigator.of(context).push<VehicleRecord>(
-     MaterialPageRoute(builder: (context) =>VehicleDetailPage(vehicle: initial)),
+    final result = await Navigator.of(context).push<CaseModel>(
+      MaterialPageRoute(
+        builder: (context) => VehicleDetailPage(
+          vehicle: initial,
+          caseId: row.caseId,
+        ),
+      ),
     );
     if (result == null || !mounted) return;
-    _homeController.updateCaseFromVehicleRecord(
-      row.registrationNumber,
-      result,
-    );
+    _homeController.replaceCase(result);
+    AppSnackbar.success(context, StringHelper.updateSuccess);
   }
 
   @override
@@ -142,13 +142,7 @@ class _HomeRequestListPageState extends State<HomeRequestListPage> {
               padH: padH,
               bottomExtra: bottomInset * 0.2,
               onAddNew: _openAddVehicle,
-              onLogout: () {
-                unawaited(UserSession.clearPersisted());
-                Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (context) =>const StartingPage()),
-                  (_) => false,
-                );
-              },
+              onLogout: () => logoutToStartingPage(),
             ),
           ],
         ),

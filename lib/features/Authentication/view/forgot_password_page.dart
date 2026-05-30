@@ -1,11 +1,15 @@
 import 'package:auto_care/constants/app_layout.dart';
+import 'package:auto_care/features/Authentication/controllers/auth_controller.dart';
+import 'package:auto_care/utils/app_snackbar.dart';
 import 'package:auto_care/utils/color_helper.dart';
 import 'package:auto_care/utils/font_helper.dart';
 import 'package:auto_care/utils/string_helper.dart';
+import 'package:auto_care/utils/vehicle_validator.dart';
 import 'package:auto_care/widgets/auth_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gap/gap.dart';
+import 'package:get/get.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -21,6 +25,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
+  late final AuthController _authController;
+
+  @override
+  void initState() {
+    super.initState();
+    _authController = Get.put(AuthController(), permanent: true);
+  }
 
   @override
   void dispose() {
@@ -30,24 +41,33 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     super.dispose();
   }
 
-  void _onSubmit() {
+  Future<void> _onSubmit() async {
     if (_newPassword.text != _confirmPassword.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(StringHelper.passwordsDoNotMatch),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      AppSnackbar.error(context, StringHelper.passwordsDoNotMatch);
       return;
     }
+    if (!(_formKey.currentState?.validate() ?? true)) return;
+
     FocusScope.of(context).unfocus();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(StringHelper.passwordResetSuccess),
-        behavior: SnackBarBehavior.floating,
-      ),
+    final success = await _authController.forgotPassword(
+      mailId: _email.text,
+      password: _newPassword.text,
+      confirmPassword: _confirmPassword.text,
     );
-    Navigator.of(context).maybePop();
+    if (!mounted) return;
+
+    if (success) {
+      AppSnackbar.success(context, StringHelper.passwordResetSuccess);
+      await Future<void>.delayed(const Duration(milliseconds: 1500));
+      if (!mounted) return;
+      Navigator.of(context).maybePop();
+      return;
+    }
+
+    final message = _authController.errorMessage.value;
+    if (message != null && message.isNotEmpty) {
+      AppSnackbar.error(context, message);
+    }
   }
 
   @override
@@ -155,6 +175,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                 prefixIcon: Icons.mail_outline_rounded,
                                 textInputAction: TextInputAction.next,
                                 keyboardType: TextInputType.emailAddress,
+                                validator: VehicleValidator.email,
                               ),
                               Gap(gapLarge),
                               AuthLoginField(
@@ -169,6 +190,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                       !_obscureNewPassword,
                                 ),
                                 textInputAction: TextInputAction.next,
+                                validator: (value) => VehicleValidator.required(
+                                  value,
+                                  message: StringHelper.passwordRequired,
+                                ),
                               ),
                               Gap(gapLarge),
                               AuthLoginField(
@@ -183,12 +208,25 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                       !_obscureConfirmPassword,
                                 ),
                                 textInputAction: TextInputAction.done,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return StringHelper.passwordRequired;
+                                  }
+                                  return null;
+                                },
                               ),
                               Gap(gapAfterFields),
-                              AuthPillButton(
-                                label: StringHelper.resetPassword,
-                                foreground: ColorHelper.primaryBlue,
-                                onPressed: _onSubmit,
+                              Obx(
+                                () => AuthPillButton(
+                                  label: _authController.isResettingPassword.value
+                                      ? StringHelper.saving
+                                      : StringHelper.resetPassword,
+                                  foreground: ColorHelper.primaryBlue,
+                                  onPressed:
+                                      _authController.isResettingPassword.value
+                                          ? null
+                                          : _onSubmit,
+                                ),
                               ),
                               Gap(gapMed),
                               Center(

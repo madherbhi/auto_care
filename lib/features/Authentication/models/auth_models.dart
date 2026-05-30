@@ -61,7 +61,11 @@ class LoginResponse {
 
   static String _readToken(Map<String, dynamic> json) {
     for (final source in _jsonSources(json)) {
-      final token = (source['token'] ?? source['accessToken'] ?? '')
+      final token = (source['token'] ??
+              source['accessToken'] ??
+              source['jwt'] ??
+              source['access_token'] ??
+              '')
           .toString()
           .trim();
       if (token.isNotEmpty) return token;
