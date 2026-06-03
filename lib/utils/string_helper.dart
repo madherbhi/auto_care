@@ -69,6 +69,7 @@ class StringHelper {
   static const String bankIdRequired = "Please select your bank branch ID";
 
   static const String inspectionRequestListTitle = "Inspection Request List";
+  static const String info = "Info";
   static const String addNew = "Add New";
   static const String logout = "Logout";
   static const String vehicleRegistrationLine =
@@ -81,6 +82,19 @@ class StringHelper {
   static const String inspectionSearchHint =
       "Search by vehicle number";
   static const String filter = "Filter";
+  static const String noCasesYet = "You don't have any cases yet.";
+  static const String noCasesYetHint =
+      "Tap Add New button to create your first case.";
+  static const String noSearchResults = "No cases match your search.";
+  static const String noSearchResultsHint =
+      "Try a different vehicle number or owner name.";
+  static const String loadCasesFailed =
+      "We couldn't load your cases right now. Please try again.";
+  static const String createCaseFailed =
+      "We couldn't save your inspection request. Please try again.";
+  static const String updateCaseFailed =
+      "We couldn't update your inspection request. Please try again.";
+  static const String tryAgain = "Try again";
 
   static const String navDashboard = "Dashboard";
   static const String navRequests = "Requests";

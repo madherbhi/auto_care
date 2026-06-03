@@ -86,7 +86,11 @@ class HomeController extends GetxController {
         await _handleSessionExpired();
         return;
       }
-      final fetched = await _service.fetchAllCases(token: token);
+      final username = UserSession.resolvedUserName()?.trim() ?? '';
+      final fetched = await _service.fetchAllCases(
+        token: token,
+        username: username,
+      );
       cases.assignAll(fetched);
       _sortCasesNewestFirst();
     } catch (e) {

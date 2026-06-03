@@ -17,14 +17,26 @@ class CasesService {
 
   final ApiClient _client;
 
-  Future<List<CaseModel>> fetchAllCases({required String token}) async {
+  Future<List<CaseModel>> fetchAllCases({
+    required String token,
+    required String username,
+  }) async {
     final trimmedToken = token.trim();
     if (trimmedToken.isEmpty) {
       throw Exception(StringHelper.sessionExpired);
     }
 
+    final trimmedUsername = username.trim();
+    if (trimmedUsername.isEmpty) {
+      throw Exception(StringHelper.userNameRequired);
+    }
+
+    final uri = Uri.parse(ApiEndpoints.casesAll).replace(
+      queryParameters: {'userName': trimmedUsername},
+    );
+
     final response = await _client.get(
-      ApiEndpoints.casesAll,
+      uri.toString(),
       token: trimmedToken,
       endpointName: 'CASES_ALL',
     );
@@ -37,7 +49,7 @@ class CasesService {
       throw Exception(
         _client.apiErrorMessage(
           response.body,
-          'Unable to load inspection requests. Please try again.',
+          StringHelper.loadCasesFailed,
         ),
       );
     }
@@ -111,7 +123,7 @@ class CasesService {
       throw Exception(
         _client.apiErrorMessage(
           response.body,
-          'Unable to create inspection request. Please try again.',
+          StringHelper.createCaseFailed,
         ),
       );
     }
@@ -178,7 +190,7 @@ class CasesService {
       throw Exception(
         _client.apiErrorMessage(
           response.body,
-          'Unable to update inspection request. Please try again.',
+          StringHelper.updateCaseFailed,
         ),
       );
     }
