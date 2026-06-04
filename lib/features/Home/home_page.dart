@@ -33,6 +33,7 @@ class _HomeRequestListPageState extends State<HomeRequestListPage> {
   @override
   void initState() {
     super.initState();
+    HomeController.disposeCached();
     _homeController = Get.put(HomeController());
     _searchController.addListener(_onSearchChanged);
   }

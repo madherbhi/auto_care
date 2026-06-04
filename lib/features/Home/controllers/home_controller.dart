@@ -64,10 +64,30 @@ class HomeController extends GetxController {
   final RxBool isLoading = false.obs;
   final RxnString errorMessage = RxnString();
 
+  /// Removes cached case list so the next login does not see another user's data.
+  static void disposeCached() {
+    if (Get.isRegistered<HomeController>()) {
+      Get.delete<HomeController>(force: true);
+    }
+  }
+
+  void clearCases() {
+    cases.clear();
+    searchQuery.value = '';
+    errorMessage.value = null;
+    isLoading.value = false;
+  }
+
   @override
   void onInit() {
     super.onInit();
     loadCases();
+  }
+
+  @override
+  void onClose() {
+    clearCases();
+    super.onClose();
   }
 
   String _humanizeError(Object error) {
