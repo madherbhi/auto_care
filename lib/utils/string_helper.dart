@@ -170,6 +170,8 @@ class StringHelper {
       "Session expired. Please log in again.";
   static const String uploadTimedOut =
       "Upload timed out. Try again on Wi‑Fi or with fewer photos.";
+  static const String existingMediaPrepareFailed =
+      "Could not prepare existing photos for upload. Please try again.";
   static const String cancel = "Cancel";
   static const String update = "Update";
   static const String updateSuccess =

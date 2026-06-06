@@ -61,7 +61,8 @@ class _HomeRequestListPageState extends State<HomeRequestListPage> {
       ),
     );
     if (result == null || !mounted) return;
-    _homeController.replaceCase(result);
+    await _homeController.loadCases();
+    if (!mounted) return;
     AppSnackbar.success(context, StringHelper.updateSuccess);
   }
 
