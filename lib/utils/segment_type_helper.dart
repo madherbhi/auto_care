@@ -4,6 +4,18 @@ import 'package:flutter/material.dart';
 class SegmentTypeHelper {
   SegmentTypeHelper._();
 
+  static const Map<String, String> _apiParams = {
+    'Car': 'CAR',
+    'Commercial vehicle': 'COMMERCIAL_VEHICLE',
+    'Construction Equipment': 'CONSTRUCTION_EQUIPMENT',
+    'Tractor/ harvester': 'TRACTOR_HARVESTER',
+  };
+
+  static String apiParamForDisplay(String display) {
+    final trimmed = display.trim();
+    return _apiParams[trimmed] ?? trimmed.toUpperCase().replaceAll(' ', '_');
+  }
+
   static IconData iconFor(String? segmentType) {
     final normalized = segmentType?.trim() ?? '';
     if (normalized.isEmpty) return Icons.directions_car_rounded;

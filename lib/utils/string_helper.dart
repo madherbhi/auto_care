@@ -70,6 +70,9 @@ class StringHelper {
 
   static const String inspectionRequestListTitle = "Inspection Request List";
   static const String info = "Info";
+  static const String segmentGuideTitle = "Segment Guide";
+  static const String segmentGuideLoadFailed =
+      "Unable to load guide video. Please try again.";
   static const String addNew = "Add New";
   static const String logout = "Logout";
   static const String vehicleRegistrationLine =

@@ -14,4 +14,7 @@ abstract final class ApiEndpoints {
   static const String casesCreate = '$baseUrl/api/v1/create';
 
   static String casesUpdate(int caseId) => '$baseUrl/api/v1/update/$caseId';
+
+  static String segmentGuideBy(String segmentType) =>
+      '$baseUrl/api/v1/segment/guide/by/$segmentType';
 }

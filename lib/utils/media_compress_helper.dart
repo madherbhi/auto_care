@@ -10,7 +10,7 @@ import 'package:video_compress/video_compress.dart';
 abstract final class MediaCompressHelper {
   MediaCompressHelper._();
 
-  static const int maxUploadBytes = 15 * 1024 * 1024;
+  static const int maxUploadBytes = 300 * 1024 * 1024;
 
   /// Returns [path] or a compressed copy under the app temp directory.
   static Future<String> prepareForUpload(String path) async {
@@ -116,7 +116,7 @@ abstract final class MediaCompressHelper {
     }
 
     throw Exception(
-      'Image is too large to upload (max 15 MB). Try a smaller photo.',
+      'Image is too large to upload (max 300 MB). Try a smaller photo.',
     );
   }
 
@@ -179,7 +179,7 @@ abstract final class MediaCompressHelper {
     }
 
     throw Exception(
-      'Video is too large to upload (max 15 MB). Record a shorter clip.',
+      'Video is too large to upload (max 300 MB). Record a shorter clip.',
     );
   }
 
