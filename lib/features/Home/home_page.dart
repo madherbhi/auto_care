@@ -387,15 +387,19 @@ class _HomeSearchRow extends StatelessWidget {
                   );
                 },
                 borderRadius: BorderRadius.circular(12),
-                child: const Tooltip(
-                  message: StringHelper.info,
-                  child: SizedBox(
-                    width: 48,
-                    height: 48,
-                    child: Icon(
-                      Icons.info_outline_rounded,
-                      color: ColorHelper.primaryBlue,
-                      size: 26,
+                child: const SizedBox(
+                  height: 48,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 14),
+                    child: Center(
+                      child: Text(
+                        StringHelper.guide,
+                        style: TextStyle(
+                          fontFamily: FontHelper.poppinsSemiBold,
+                          color: ColorHelper.primaryBlue,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                   ),
                 ),
