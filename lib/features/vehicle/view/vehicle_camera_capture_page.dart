@@ -151,7 +151,7 @@ class _VehicleCameraCapturePageState extends State<VehicleCameraCapturePage> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(StringHelper.captureFailed)),
+       const SnackBar(content: Text(StringHelper.captureFailed)),
       );
       setState(() => _capturing = false);
     }

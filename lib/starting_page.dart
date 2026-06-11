@@ -65,7 +65,7 @@ class StartingPage extends StatelessWidget {
                             border: null,
                             onTap: () {
                               Navigator.of(innerCtx).push(
-                                MaterialPageRoute(builder: (context) =>LoginPage()),
+                                MaterialPageRoute(builder: (context) => const LoginPage()),
                               );
                             },
                           ),
@@ -79,7 +79,7 @@ class StartingPage extends StatelessWidget {
                             border: const BorderSide(color: ColorHelper.buttonOutline),
                             onTap: () {
                               Navigator.of(innerCtx).push(
-                           MaterialPageRoute(builder: (context) => RegisterPage()),
+                           MaterialPageRoute(builder: (context) => const RegisterPage()),
                               );
                             },
                           ),

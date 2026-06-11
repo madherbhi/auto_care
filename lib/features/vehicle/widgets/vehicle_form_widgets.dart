@@ -290,8 +290,7 @@ class _VehicleVideoPreviewState extends State<VehicleVideoPreview> {
 
   @override
   Widget build(BuildContext context) {
-    final ownerContact = widget.ownerContact;
-    final showPlayOverlay =
+   final showPlayOverlay =
         _controller == null || !_controller!.value.isPlaying;
 
     return ClipRRect(

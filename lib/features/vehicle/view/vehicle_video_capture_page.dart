@@ -147,7 +147,7 @@ class _VehicleVideoCapturePageState extends State<VehicleVideoCapturePage> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(StringHelper.videoCaptureFailed)),
+        const SnackBar(content: Text(StringHelper.videoCaptureFailed)),
       );
     }
   }
@@ -174,7 +174,7 @@ class _VehicleVideoCapturePageState extends State<VehicleVideoCapturePage> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(StringHelper.videoCaptureFailed)),
+        const SnackBar(content: Text(StringHelper.videoCaptureFailed)),
       );
       setState(() => _processing = false);
     }

@@ -96,7 +96,7 @@ class MediaHelper {
         await CaptureMetadataService.ensureLocationPermission();
     if (!locationGranted && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(StringHelper.locationPermissionRequired)),
+        const SnackBar(content: Text(StringHelper.locationPermissionRequired)),
       );
     }
     if (!context.mounted) return null;
@@ -151,7 +151,7 @@ class MediaHelper {
         await CaptureMetadataService.ensureLocationPermission();
     if (!locationGranted && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(StringHelper.locationPermissionRequired)),
+        const SnackBar(content: Text(StringHelper.locationPermissionRequired)),
       );
     }
     if (!context.mounted) return null;
