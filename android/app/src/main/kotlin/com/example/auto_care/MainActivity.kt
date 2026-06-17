@@ -1,4 +1,4 @@
-package com.gnvi.autocare
+package com.gnvi.app
 
 import io.flutter.embedding.android.FlutterActivity
 
