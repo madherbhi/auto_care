@@ -268,12 +268,19 @@ class _VehicleVideoPreviewState extends State<VehicleVideoPreview> {
   Widget _buildVideoSurface() {
     final controller = _controller;
     if (controller != null && controller.value.isInitialized) {
-      return FittedBox(
-        fit: BoxFit.cover,
-        child: SizedBox(
-          width: controller.value.size.width,
-          height: controller.value.size.height,
-          child: VideoPlayer(controller),
+      final videoWidth = controller.value.size.width;
+      final videoHeight = controller.value.size.height;
+      return ColoredBox(
+        color: ColorHelper.black,
+        child: Center(
+          child: FittedBox(
+            fit: BoxFit.contain,
+            child: SizedBox(
+              width: videoWidth > 0 ? videoWidth : 16,
+              height: videoHeight > 0 ? videoHeight : 9,
+              child: VideoPlayer(controller),
+            ),
+          ),
         ),
       );
     }
@@ -292,11 +299,19 @@ class _VehicleVideoPreviewState extends State<VehicleVideoPreview> {
   Widget build(BuildContext context) {
    final showPlayOverlay =
         _controller == null || !_controller!.value.isPlaying;
+    final controller = _controller;
+    final screenSize = MediaQuery.sizeOf(context);
+    final aspectRatio = controller != null && controller.value.isInitialized
+        ? controller.value.aspectRatio
+        : 16 / 9;
+    final previewHeight = (screenSize.width / aspectRatio)
+        .clamp(160.0, screenSize.height * 0.38);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(AuthFieldLayout.radius),
-      child: AspectRatio(
-        aspectRatio: 16 / 9,
+      child: SizedBox(
+        width: double.infinity,
+        height: previewHeight,
         child: Stack(
           fit: StackFit.expand,
           children: [

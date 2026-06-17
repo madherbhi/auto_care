@@ -80,6 +80,29 @@ class _SegmentGuideVideoPageState extends State<SegmentGuideVideoPage> {
     }
   }
 
+  Widget _buildVideoPlayer(VideoPlayerController controller) {
+    final videoWidth = controller.value.size.width;
+    final videoHeight = controller.value.size.height;
+    if (videoWidth <= 0 || videoHeight <= 0) {
+      return VideoPlayer(controller);
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Center(
+          child: FittedBox(
+            fit: BoxFit.contain,
+            child: SizedBox(
+              width: videoWidth,
+              height: videoHeight,
+              child: VideoPlayer(controller),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = _controller;
@@ -94,69 +117,75 @@ class _SegmentGuideVideoPageState extends State<SegmentGuideVideoPage> {
       ),
       child: Scaffold(
         backgroundColor: ColorHelper.black,
-        body: Stack(
-          fit: StackFit.expand,
-          children: [
-            GestureDetector(
-              onTap: _errorMessage == null ? _togglePlayback : null,
-              child: ColoredBox(
-                color: ColorHelper.black,
-                child: _errorMessage != null
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Text(
-                            _errorMessage!,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontFamily: FontHelper.poppinsRegular,
-                              fontSize: 14,
-                              color: ColorHelper.white,
-                            ),
-                          ),
-                        ),
-                      )
-                    : !_initialized || controller == null
-                        ? const Center(
-                            child: CircularProgressIndicator(
-                              color: ColorHelper.white,
-                              strokeWidth: 2,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: ClipRect(
+                  child: GestureDetector(
+                  onTap: _errorMessage == null ? _togglePlayback : null,
+                  child: ColoredBox(
+                    color: ColorHelper.black,
+                    child: _errorMessage != null
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Text(
+                                _errorMessage!,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontFamily: FontHelper.poppinsRegular,
+                                  fontSize: 14,
+                                  color: ColorHelper.white,
+                                ),
+                              ),
                             ),
                           )
-                        : FittedBox(
-                            fit: BoxFit.cover,
-                            child: SizedBox(
-                              width: controller.value.size.width,
-                              height: controller.value.size.height,
-                              child: VideoPlayer(controller),
-                            ),
-                          ),
+                        : !_initialized || controller == null
+                            ? const Center(
+                                child: CircularProgressIndicator(
+                                  color: ColorHelper.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : _buildVideoPlayer(controller),
+                  ),
+                ),
+                ),
               ),
-            ),
-            if (_initialized && showPlayOverlay)
-              IgnorePointer(
-                child: ColoredBox(
-                  color: ColorHelper.black.withValues(alpha: 0.25),
-                  child: const Center(
-                    child: Icon(
-                      Icons.play_circle_fill_rounded,
-                      color: ColorHelper.white,
-                      size: 72,
+              if (_initialized && showPlayOverlay)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: ColoredBox(
+                      color: ColorHelper.black.withValues(alpha: 0.25),
+                      child: const Center(
+                        child: Icon(
+                          Icons.play_circle_fill_rounded,
+                          color: ColorHelper.white,
+                          size: 72,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            SafeArea(
-              child: Align(
+              Align(
                 alignment: Alignment.topLeft,
-                child: IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close_rounded, color: ColorHelper.white),
-                  tooltip: StringHelper.cancel,
+                child: Material(
+                  color: ColorHelper.black.withValues(alpha: 0.45),
+                  shape: const CircleBorder(),
+                  clipBehavior: Clip.antiAlias,
+                  child: IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: ColorHelper.white,
+                    ),
+                    tooltip: StringHelper.cancel,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
