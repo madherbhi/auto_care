@@ -1,7 +1,8 @@
 abstract final class ApiEndpoints {
   ApiEndpoints._();
 
-  static const String baseUrl = 'http://35.154.202.121:8080';
+ // static const String baseUrl = 'http://35.154.202.121:8080';
+  static const String baseUrl = 'http://13.234.186.191:8080';
 
   // Auth
   static const String authRegister = '$baseUrl/auth/register';

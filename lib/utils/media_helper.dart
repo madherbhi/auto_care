@@ -31,20 +31,6 @@ class MediaHelper {
     return status.isGranted;
   }
 
-  static Future<bool> _ensurePhotosPermission() async {
-    final photos = await Permission.photos.status;
-    if (photos.isGranted) return true;
-    if (photos.isDenied || photos.isLimited) {
-      final result = await Permission.photos.request();
-      if (result.isGranted || result.isLimited) return true;
-    }
-
-    final storage = await Permission.storage.status;
-    if (storage.isGranted) return true;
-    final storageResult = await Permission.storage.request();
-    return storageResult.isGranted;
-  }
-
   static Future<ImageSource?> pickVehicleImageSource(BuildContext context) {
     return showModalBottomSheet<ImageSource>(
       context: context,
@@ -126,8 +112,8 @@ class MediaHelper {
     return file?.path;
   }
 
+  /// Uses the system photo picker — no READ_MEDIA_* / storage permission needed.
   static Future<String?> pickImageFromGallery() async {
-    if (!await _ensurePhotosPermission()) return null;
     final file = await _picker.pickImage(source: ImageSource.gallery);
     return file?.path;
   }
