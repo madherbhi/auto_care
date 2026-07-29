@@ -1,4 +1,4 @@
-package com.example.auto_care
+package com.gnvi.app
 
 import io.flutter.embedding.android.FlutterActivity
 
